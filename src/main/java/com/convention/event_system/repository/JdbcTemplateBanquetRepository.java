@@ -1,0 +1,61 @@
+package com.convention.event_system.repository;
+
+import com.convention.event_system.domain.Banquet;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
+
+import java.sql.PreparedStatement;
+import java.sql.Statement;
+
+@Repository
+@Slf4j
+@RequiredArgsConstructor
+public class JdbcTemplateBanquetRepository implements BanquetRepository {
+
+    private final JdbcTemplate jdbcTemplate; // DB조작 도구임 주입 받고 쓰면 됌
+
+    @Override
+    public Banquet save(Banquet banquet) {
+//        커넥션 취득이나 나머지 자원 반환도 jdbcTemplate에서 알아서 해줌 그래서 템플릿을 주입 받아서 update(), query()
+//        같은 메서드로 커넥션 풀이나 다른 거 고민할 필요 없이 알아서 다 해주니 우리는 람다식에 커넥션이랑 자동증가값이 있다면
+//        그 인자만 잘 넘겨주고 preparedStatement 세팅만 잘 해줘서 람다식 안에서 그걸 리턴해주고 객체를 잘 넘기면 됌 ㅇㅋ?
+
+        KeyHolder keyHolder = new GeneratedKeyHolder(); //DB에서 자동으로 만든 id값을 받아올 변수
+
+        String sql = """
+                INSERT INTO event (event_name, event_date, start_time, end_time, promoter_id, in_charge_id,
+                venue, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""";
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            //Statement.RETURN_GENERATED_KEYS 이게 DB에서 만들어주는 자동 증가 키값을 받아오겠다는 표시임 안그럼 에러남
+
+            ps.setString(1, banquet.getBanquetName());
+            ps.setObject(2, banquet.getBanquetDate());
+            ps.setObject(3, banquet.getStartTime());
+            ps.setObject(4, banquet.getEndTime());
+            ps.setLong(5, banquet.getPromoter().getMemberId());
+            ps.setObject(6, banquet.getInCharge() !=null ?
+                    banquet.getInCharge().getMemberId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
+            ps.setString(7, banquet.getVenue());
+            ps.setObject(8, banquet.getGuarantee() !=null ?
+                    banquet.getGuarantee() : null);
+
+
+            return ps;
+        }, keyHolder); // DB에서 넘겨줄 키값을 받을 키홀더도 update() 안에 선언해줘야 함
+
+        long generatedId = keyHolder.getKey().longValue();
+        banquet.setBanquetId(generatedId);
+        // DB에는 자동으로 id값이 선언되어 다른 쿼리문이랑 같이 한 번에 저장이 되기 때문에 이 작업은 update() 안에서 할 필요가 없음
+        // 이 작업은 우리가 도메인에(자바에) 저장할 id값만 불러오는 작업이니까
+
+        return banquet;
+
+    }
+
+}
