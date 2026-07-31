@@ -27,7 +27,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder(); //DB에서 자동으로 만든 id값을 받아올 변수
 
         String sql = """
-                INSERT INTO event (event_name, event_date, start_time, end_time, promoter_id, in_charge_id,
+                INSERT INTO event (banquet_name, banquet_date, start_time, end_time, promoter_id, in_charge_id,
                 venue, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""";
 
         jdbcTemplate.update(connection -> {
