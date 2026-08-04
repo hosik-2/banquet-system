@@ -2,6 +2,8 @@ package com.convention.event_system.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,6 +15,8 @@ import java.time.LocalTime;
 //그래서 @AllArgsConstructor 이거 하나만 쓰면 기본 생성자가 사라져서 나중에 요청을 받을 때 에러가 발생할 수 있음 그래서 @NoArgsConstructor를
 //같이 쓰거나 기본 생성자만 씀
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BanquetCreateRequest {
 
 //    private Long eventId; // 기본형 말고 래퍼클래스 쓰기(null값 허용 여부 -> PK필드는 래퍼클래스 쓰기)

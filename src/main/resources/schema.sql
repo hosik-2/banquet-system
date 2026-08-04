@@ -18,5 +18,7 @@ CREATE TABLE member(
     department VARCHAR(255) NOT NULL
 );
 
-INSERT INTO member(member_id, member_name, department)
-VALUES (1, "testPromoter", "Convention");
+INSERT INTO member(member_name, department)
+VALUES ("testPromoter", "Convention");
+INSERT INTO member(member_name, department)
+VALUES ("testInCharge", "SVC");
