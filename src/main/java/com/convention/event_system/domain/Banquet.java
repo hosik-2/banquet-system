@@ -1,5 +1,6 @@
 package com.convention.event_system.domain;
 
+import com.convention.event_system.dto.BanquetCreateRequest;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -21,12 +22,24 @@ public class Banquet {
 
     private LocalTime endTime;
 
-    private Member promoter;
+    private Long promoterId;
 
-    private Member inCharge;
+    private Long inChargeId;
 
     private String venue;
 
     private Integer guarantee;
 
+    public Banquet(BanquetCreateRequest request) {
+        this.banquetName = request.getBanquetName();
+        this.banquetDate = request.getBanquetDate();
+        this.startTime = request.getStartTime();
+        this.endTime = request.getEndTime();
+        this.promoterId = request.getPromoterId();
+        this.inChargeId = request.getInChargeId();
+        this.venue = request.getVenue();
+        this.guarantee = request.getGuarantee();
+    }
 }
+
+

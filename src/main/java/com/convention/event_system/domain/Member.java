@@ -12,4 +12,6 @@ public class Member {
 
     private String memberName;
 
+    private Department department;
+
 }

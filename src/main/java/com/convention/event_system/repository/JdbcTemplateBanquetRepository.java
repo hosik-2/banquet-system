@@ -1,15 +1,19 @@
 package com.convention.event_system.repository;
 
 import com.convention.event_system.domain.Banquet;
+import com.convention.event_system.domain.Member;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.LocalDate;
 
 @Repository
 @Slf4j
@@ -27,7 +31,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
         KeyHolder keyHolder = new GeneratedKeyHolder(); //DB에서 자동으로 만든 id값을 받아올 변수
 
         String sql = """
-                INSERT INTO event (banquet_name, banquet_date, start_time, end_time, promoter_id, in_charge_id,
+                INSERT INTO banquet (banquet_name, banquet_date, start_time, end_time, promoter_id, in_charge_id,
                 venue, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""";
 
         jdbcTemplate.update(connection -> {
@@ -38,9 +42,9 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
             ps.setObject(2, banquet.getBanquetDate());
             ps.setObject(3, banquet.getStartTime());
             ps.setObject(4, banquet.getEndTime());
-            ps.setLong(5, banquet.getPromoter().getMemberId());
-            ps.setObject(6, banquet.getInCharge() !=null ?
-                    banquet.getInCharge().getMemberId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
+            ps.setLong(5, banquet.getPromoterId());
+            ps.setObject(6, banquet.getInChargeId() !=null ?
+                    banquet.getInChargeId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
             ps.setString(7, banquet.getVenue());
             ps.setObject(8, banquet.getGuarantee() !=null ?
                     banquet.getGuarantee() : null);
@@ -57,5 +61,26 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
         return banquet;
 
     }
+
+    @Override
+    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, String venue) {
+        String sql = """
+                SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
+                """;
+
+        Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
+        boolean result;
+        if (countForQuery > 0) result = true;
+        else result = false;
+
+        return result;
+    }
+
+    @Override
+    public Member findMemberById(Long memberId) {
+        String sql = "SELECT * FROM MEMBER WHERE member_id = ?";
+        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Member.class), memberId);
+    }
+
 
 }
