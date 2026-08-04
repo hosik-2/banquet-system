@@ -11,3 +11,12 @@ CREATE TABLE banquet(
     guarantee INT
 
 );
+
+CREATE TABLE member(
+    member_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    member_name VARCHAR(255) NOT NULL,
+    department VARCHAR(255) NOT NULL
+);
+
+INSERT INTO member(member_id, member_name, department)
+VALUES (1, "testPromoter", "Convention");

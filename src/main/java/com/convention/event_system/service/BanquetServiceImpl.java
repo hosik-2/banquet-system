@@ -1,11 +1,13 @@
 package com.convention.event_system.service;
 
 import com.convention.event_system.domain.Banquet;
+import com.convention.event_system.domain.Department;
 import com.convention.event_system.domain.Member;
 import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.repository.BanquetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -24,7 +26,14 @@ public class BanquetServiceImpl implements BanquetService{
             throw new NullPointerException("request null");
         }
 
-        Member promoter = banquetRepository.findMemberById(request.getPromoterId());
+        Member promoter;
+
+        try {
+            promoter = banquetRepository.findMemberById(request.getPromoterId());
+        } catch (DataAccessException e) {
+            throw new IllegalArgumentException("존재하지 않는 회원입니다.", e);
+        }
+
 
         // 비즈니스 규칙 검사
         if (banquetRepository.existsByBanquetDateAndVenue(request.getBanquetDate(), request.getVenue())) {
@@ -35,7 +44,7 @@ public class BanquetServiceImpl implements BanquetService{
             //행사 시작시간 < 종료시간 검증
             throw new IllegalArgumentException("시작시간이 종료시간보다 늦습니다.");
         }
-        if (promoter == null || !promoter.getDepartment().equals("Convention")) {
+        if (!promoter.getDepartment().equals(Department.Convention)) {
             //등록 사용자 권한 검증
             throw new IllegalArgumentException("판촉자가 아니면 행사를 등록할 수 없습니다.");
         }
