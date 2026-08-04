@@ -64,11 +64,13 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
 
     @Override
     public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, String venue) {
+        //중복 검사를 위한 조회 메서드
         String sql = """
                 SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
                 """;
 
         Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
+        //queryForObject() 는 조회가 단건일 때 쓰는 메서드임 기본 래퍼클래스를 받을 때는 저렇게 해주고 객체를 받을 때는 아래 참조
         boolean result;
         if (countForQuery > 0) result = true;
         else result = false;
@@ -80,6 +82,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
     public Member findMemberById(Long memberId) {
         String sql = "SELECT * FROM MEMBER WHERE member_id = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Member.class), memberId);
+        // 이것이 객체를 받을 때 쓰는 메서드 사용 방법임
     }
 
 
