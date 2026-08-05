@@ -19,7 +19,7 @@ public class BanquetServiceImpl implements BanquetService{
 
 
     @Override
-    public void registerBanquet(BanquetCreateRequest request) throws IllegalArgumentException {
+    public void registerBanquet(BanquetCreateRequest request) {
 
         //먼저 모든 로직 전에 NPE를 방지하기 위해서 먼저 널체크
         if (request == null) {
