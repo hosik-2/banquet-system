@@ -19,6 +19,6 @@ CREATE TABLE member(
 );
 
 INSERT INTO member(member_name, department)
-VALUES ("testPromoter", "Convention");
+VALUES ('testPromoter', 'Convention');
 INSERT INTO member(member_name, department)
-VALUES ("testInCharge", "SVC");
+VALUES ('testInCharge', 'SVC');
