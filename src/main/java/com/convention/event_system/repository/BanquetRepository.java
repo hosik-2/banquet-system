@@ -14,6 +14,7 @@ public interface BanquetRepository {
     boolean existsByBanquetDateAndVenue(LocalDate banquetDate, String venue);
     // 행사 등록 시 중복 검사를 위한 검증 메서드
 
+    //TODO MemberRepository 만들고 메서드 이동.
     Member findMemberById(Long memberId);
 
     //나머지 메서드는 추후 생성(지금은 행사 등록 기능 제작 먼저)

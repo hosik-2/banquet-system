@@ -1,5 +1,6 @@
-package com.convention.event_system.domain;
+package com.convention.event_system.auth;
 
+import com.convention.event_system.domain.Role;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
