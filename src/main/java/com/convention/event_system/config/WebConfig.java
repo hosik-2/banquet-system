@@ -7,7 +7,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
-@Configuration
+@Configuration //설정 정보 스티커
 public class WebConfig implements WebMvcConfigurer {
 
     private final LoginMemberArgumentResolver loginMemberArgumentResolver;
