@@ -1,5 +1,6 @@
 package com.convention.event_system.repository;
 
+import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.Member;
 
