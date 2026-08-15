@@ -1,5 +1,6 @@
 package com.convention.event_system.service;
 
+import com.convention.event_system.auth.BanquetPolicy;
 import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.Role;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class BanquetServiceImpl implements BanquetService{
 
     private final BanquetRepository banquetRepository;
+    private final BanquetPolicy banquetPolicy;
 
 
     @Override
@@ -35,11 +37,10 @@ public class BanquetServiceImpl implements BanquetService{
             //행사 시작시간 < 종료시간 검증
             throw new IllegalArgumentException("시작시간이 종료시간보다 늦습니다.");
         }
-        if (actor.getRole() != Role.PROMOTER) {
-            //등록 사용자 권한 검증 -> 추후 BanquetPolicy로 이동
-            //요청 데이터의 id가 아닌 사용자의 Role 기준으로 권한 판단
-            throw new IllegalArgumentException("판촉자가 아니면 행사를 등록할 수 없습니다.");
-        }
+
+        banquetPolicy.ensureCanRegister(actor);
+
+
 
         banquetRepository.save(new Banquet(request, actor.getId()));
 

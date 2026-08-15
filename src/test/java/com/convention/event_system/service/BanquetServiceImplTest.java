@@ -1,5 +1,6 @@
 package com.convention.event_system.service;
 
+import com.convention.event_system.auth.BanquetPolicy;
 import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Role;
 import com.convention.event_system.dto.BanquetCreateRequest;
@@ -15,14 +16,15 @@ import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.mockito.BDDMockito.any;
-import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class BanquetServiceImplTest {
 
     @Mock
     private BanquetRepository banquetRepository;
+    @Mock
+    private BanquetPolicy banquetPolicy;
     @InjectMocks
     private BanquetServiceImpl banquetService;
 
@@ -111,6 +113,10 @@ class BanquetServiceImplTest {
         LoginMember actor = new LoginMember(1L, Role.STAFF);
 
         //when
+        willThrow(new IllegalArgumentException("판촉자가 아니면 행사를 등록할 수 없습니다."))
+                .given(banquetPolicy)
+                .ensureCanRegister(actor);
+
         //then
         assertThatThrownBy(() -> {
             banquetService.registerBanquet(request, actor);
