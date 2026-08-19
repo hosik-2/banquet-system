@@ -30,12 +30,13 @@ public class Banquet {
 
     private Integer guarantee;
 
-    public Banquet(BanquetCreateRequest request) {
+    //추후 setter 제거 예정
+    public Banquet(BanquetCreateRequest request, Long promoterId) {
         this.banquetName = request.getBanquetName();
         this.banquetDate = request.getBanquetDate();
         this.startTime = request.getStartTime();
         this.endTime = request.getEndTime();
-        this.promoterId = request.getPromoterId();
+        this.promoterId = promoterId;
         this.inChargeId = request.getInChargeId();
         this.venue = request.getVenue();
         this.guarantee = request.getGuarantee();
