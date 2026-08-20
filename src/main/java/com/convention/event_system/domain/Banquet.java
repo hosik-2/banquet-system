@@ -15,11 +15,11 @@ public class Banquet {
 
     private Long inChargeId;
 
-    private final String venue; //TODO: to Enum
+    private final Venue venue; //TODO: to Enum
 
     private Integer guarantee;
 
-    private Banquet(String banquetName, BanquetSchedule schedule, String venue, Integer guarantee, Long promoterId) {
+    private Banquet(String banquetName, BanquetSchedule schedule, Venue venue, Integer guarantee, Long promoterId) {
         this.banquetName = banquetName;
         this.schedule = schedule;
         this.venue = venue;
@@ -29,7 +29,7 @@ public class Banquet {
         // 여기서 인차지 아이디는 따로 메서드 생성, 판촉자는 로그인 정보에서 주입, 방켓아이디는 DB생성
     }
 
-    public static Banquet register(String banquetName, BanquetSchedule schedule, String venue, Integer guarantee, Long promoterId) {
+    public static Banquet register(String banquetName, BanquetSchedule schedule, Venue venue, Integer guarantee, Long promoterId) {
         return new Banquet(
                 banquetName,
                 schedule,

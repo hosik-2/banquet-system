@@ -2,6 +2,7 @@ package com.convention.event_system.repository;
 
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.Member;
+import com.convention.event_system.domain.Venue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
@@ -44,7 +45,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
             ps.setLong(5, banquet.getPromoterId());
             ps.setObject(6, banquet.getInChargeId() != null ?
                     banquet.getInChargeId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
-            ps.setString(7, banquet.getVenue());
+            ps.setString(7, banquet.getVenue().name());
             ps.setObject(8, banquet.getGuarantee() != null ?
                     banquet.getGuarantee() : null);
 
@@ -62,7 +63,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
     }
 
     @Override
-    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, String venue) {
+    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, Venue venue) {
         //중복 검사를 위한 조회 메서드
         String sql = """
                 SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?

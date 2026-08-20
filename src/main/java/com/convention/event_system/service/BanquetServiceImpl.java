@@ -4,6 +4,7 @@ import com.convention.event_system.auth.BanquetPolicy;
 import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.BanquetSchedule;
+import com.convention.event_system.domain.Venue;
 import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.repository.BanquetRepository;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class BanquetServiceImpl implements BanquetService {
 
 
         // 비즈니스 규칙 검사
-        if (banquetRepository.existsByBanquetDateAndVenue(request.getBanquetDate(), request.getVenue())) {
+        if (banquetRepository.existsByBanquetDateAndVenue(request.getBanquetDate(), Venue.valueOf(request.getVenue()))) {
             //같은 날짜, 같은 베뉴 행사 존재 확인 및 검증
             throw new IllegalArgumentException("같은 날짜, 같은 베뉴에 행사가 있습니다.");
         }
@@ -46,7 +47,7 @@ public class BanquetServiceImpl implements BanquetService {
         banquetRepository.save(Banquet.register(
                 request.getBanquetName(),
                 banquetSchedule,
-                request.getVenue(),
+                Venue.valueOf(request.getVenue()),
                 request.getGuarantee(),
                 actor.getId()
         ));
