@@ -1,6 +1,7 @@
 package com.convention.event_system.repository;
 
 import com.convention.event_system.domain.Banquet;
+import com.convention.event_system.domain.BanquetSchedule;
 import com.convention.event_system.domain.Member;
 import com.convention.event_system.domain.Venue;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 @Slf4j
@@ -62,20 +64,37 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
 
     }
 
-    @Override
-    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, Venue venue) {
-        //중복 검사를 위한 조회 메서드
+    @Override //행사 중복 여부를 위해 중복 날짜객체 반환
+    public List<BanquetSchedule> findSchedulesByDateAndVenue(LocalDate banquetDate, Venue venue) {
         String sql = """
-                SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
+                SELECT * FROM BANQUET WHERE banquet_date = ? AND venue = ?
                 """;
 
-        Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
-        boolean result;
-        if (countForQuery > 0) result = true;
-        else result = false;
+        return jdbcTemplate.query(sql, (rs, rowNum) ->
+                        new BanquetSchedule(
+                                rs.getDate("banquet_date").toLocalDate(),
+                                rs.getTime("start_time").toLocalTime(),
+                                rs.getTime("end_time").toLocalTime()
+                        ),
+                banquetDate, venue);
 
-        return result;
     }
+
+
+//    @Override
+//    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, Venue venue) {
+//        //중복 검사를 위한 조회 메서드
+//        String sql = """
+//                SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
+//                """;
+//
+//        Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
+//        boolean result;
+//        if (countForQuery > 0) result = true;
+//        else result = false;
+//
+//        return result;
+//    }
 
     @Override
     public Member findMemberById(Long memberId) {

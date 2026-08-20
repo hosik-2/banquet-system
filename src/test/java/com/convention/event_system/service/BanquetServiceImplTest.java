@@ -2,6 +2,7 @@ package com.convention.event_system.service;
 
 import com.convention.event_system.auth.BanquetPolicy;
 import com.convention.event_system.auth.LoginMember;
+import com.convention.event_system.domain.BanquetSchedule;
 import com.convention.event_system.domain.Role;
 import com.convention.event_system.domain.Venue;
 import com.convention.event_system.dto.BanquetCreateRequest;
@@ -14,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -43,8 +45,6 @@ class BanquetServiceImplTest {
         //가짜 로그인 멤버
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
 
-        //중복 검사를 실행하면 어떤 값이 들어오던 false를 리턴해라
-        given(banquetRepository.existsByBanquetDateAndVenue(any(), any())).willReturn(false);
         //when
         //then
         assertDoesNotThrow(() -> banquetService.registerBanquet(request, actor));
@@ -64,10 +64,14 @@ class BanquetServiceImplTest {
         //가짜 로그인 멤버
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
 
-        //이미 있는 값이라고 치고 중복 검사 메서드가 작동하는지 확인
-        given(banquetRepository.existsByBanquetDateAndVenue(LocalDate.of(2026, 8, 1), Venue.CHAMBER_HALL)).willReturn(true);
-
         //when
+        BanquetSchedule existingSchedule = new BanquetSchedule(
+                LocalDate.of(2026, 8, 1),
+                LocalTime.of(18, 00),
+                LocalTime.of(21, 00)
+        );
+        given(banquetRepository.findSchedulesByDateAndVenue(any(), any())).willReturn(List.of(existingSchedule));
+
         //then
         assertThatThrownBy(() -> {
             banquetService.registerBanquet(request, actor);
