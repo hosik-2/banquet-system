@@ -1,46 +1,58 @@
 package com.convention.event_system.domain;
 
-import com.convention.event_system.dto.BanquetCreateRequest;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-
-@Getter @Setter
-@NoArgsConstructor
+@Getter
 public class Banquet {
 
     private Long banquetId; // 기본형 말고 래퍼클래스 쓰기(null값 허용 여부 -> PK필드는 래퍼클래스 쓰기)
 
-    private String banquetName;
+    private final String banquetName;
 
-    private LocalDate banquetDate; //Date 쓰지 않기
+    private BanquetSchedule schedule;
 
-    private LocalTime startTime;
-
-    private LocalTime endTime;
-
-    private Long promoterId;
+    private final Long promoterId;
 
     private Long inChargeId;
 
-    private String venue;
+    private final String venue; //TODO: to Enum
 
     private Integer guarantee;
 
-    //추후 setter 제거 예정
-    public Banquet(BanquetCreateRequest request, Long promoterId) {
-        this.banquetName = request.getBanquetName();
-        this.banquetDate = request.getBanquetDate();
-        this.startTime = request.getStartTime();
-        this.endTime = request.getEndTime();
+    private Banquet(String banquetName, BanquetSchedule schedule, String venue, Integer guarantee, Long promoterId) {
+        this.banquetName = banquetName;
+        this.schedule = schedule;
+        this.venue = venue;
+        this.guarantee = guarantee;
         this.promoterId = promoterId;
-        this.inChargeId = request.getInChargeId();
-        this.venue = request.getVenue();
-        this.guarantee = request.getGuarantee();
+
+        // 여기서 인차지 아이디는 따로 메서드 생성, 판촉자는 로그인 정보에서 주입, 방켓아이디는 DB생성
+    }
+
+    public static Banquet register(String banquetName, BanquetSchedule schedule, String venue, Integer guarantee, Long promoterId) {
+        return new Banquet(
+                banquetName,
+                schedule,
+                venue,
+                guarantee,
+                promoterId
+        );
+    }
+
+    public void assignId(Long banquetId) {
+        this.banquetId = banquetId;
+    }
+
+    public void reschedule(BanquetSchedule schedule) {
+        this.schedule = schedule;
+    }
+
+    public void assignInCharge(Long inChargeId) {
+        this.inChargeId = inChargeId;
+    }
+
+    public void changeGuarantee(Integer guarantee) {
+        this.guarantee = guarantee;
     }
 }
-
 

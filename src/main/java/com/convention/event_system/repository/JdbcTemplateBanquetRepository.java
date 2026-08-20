@@ -1,6 +1,5 @@
 package com.convention.event_system.repository;
 
-import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.Member;
 import lombok.RequiredArgsConstructor;
@@ -39,14 +38,14 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
             //Statement.RETURN_GENERATED_KEYS 이게 DB에서 만들어주는 자동 증가 키값을 받아오겠다는 표시임 안그럼 에러남
 
             ps.setString(1, banquet.getBanquetName());
-            ps.setObject(2, banquet.getBanquetDate());
-            ps.setObject(3, banquet.getStartTime());
-            ps.setObject(4, banquet.getEndTime());
+            ps.setObject(2, banquet.getSchedule().getBanquetDate());
+            ps.setObject(3, banquet.getSchedule().getStartTime());
+            ps.setObject(4, banquet.getSchedule().getEndTime());
             ps.setLong(5, banquet.getPromoterId());
-            ps.setObject(6, banquet.getInChargeId() !=null ?
+            ps.setObject(6, banquet.getInChargeId() != null ?
                     banquet.getInChargeId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
             ps.setString(7, banquet.getVenue());
-            ps.setObject(8, banquet.getGuarantee() !=null ?
+            ps.setObject(8, banquet.getGuarantee() != null ?
                     banquet.getGuarantee() : null);
 
 
@@ -54,7 +53,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
         }, keyHolder); // DB에서 넘겨줄 키값을 받을 키홀더도 update() 안에 선언해줘야 함
 
         long generatedId = keyHolder.getKey().longValue();
-        banquet.setBanquetId(generatedId);
+        banquet.assignId(generatedId);
         // DB에는 자동으로 id값이 선언되어 다른 쿼리문이랑 같이 한 번에 저장이 되기 때문에 이 작업은 update() 안에서 할 필요가 없음
         // 이 작업은 우리가 도메인에(자바에) 저장할 id값만 불러오는 작업이니까
 

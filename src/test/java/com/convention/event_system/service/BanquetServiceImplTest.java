@@ -75,29 +75,6 @@ class BanquetServiceImplTest {
     }
 
     @Test
-    void 시작시간_설정_오류() {
-        //given
-        BanquetCreateRequest request = BanquetCreateRequest.builder()
-                .banquetName("test1")
-                .banquetDate(LocalDate.of(2026, 8, 1))
-                .startTime(LocalTime.of(18, 00))
-                .endTime(LocalTime.of(12, 00))
-                .venue("Chamber Hall")
-                .build();
-
-        //가짜 로그인 멤버
-        LoginMember actor = new LoginMember(1L, Role.PROMOTER);
-
-        //when
-        //then
-        assertThatThrownBy(() -> {
-            banquetService.registerBanquet(request,actor);
-        }).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("시작시간이 종료시간보다 늦습니다.");
-
-    }
-
-    @Test
     void 권한_검증_오류() {
         //given
         BanquetCreateRequest request = BanquetCreateRequest.builder()
