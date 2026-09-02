@@ -42,7 +42,7 @@ class BanquetApiControllerTest {
                             "banquetDate" : "2026-08-01",
                             "startTime" : "18:00",
                             "endTime" : "21:00",
-                            "venue" : "Chamber_Hall"
+                            "venue" : "CHAMBER_HALL"
                         }
                 """;
 
@@ -65,18 +65,20 @@ class BanquetApiControllerTest {
 
     @Test
     void 중복_행사_등록시_400_반환() throws Exception {
-        /**
-            실제 통합테스트가 컨트롤러 테스트이며, 어떤 요청이 들어오던 IllegalArgumentException("같은 날짜, 같은 베뉴에 행사가 있습니다.")을
-            반환하게 만들어 행사 중복 예외를 호출하게 만듦
-         **/
-
 
         //given
         // void 메서드에서 예외를 발생시키기 위해 doThrow().when() 사용
         // 리턴값이 있는 메서드는 when().thenReturn() 사용
         doThrow(new IllegalArgumentException("같은 날짜, 같은 베뉴에 행사가 있습니다."))
                 .when(banquetService)
-                .registerBanquet(any(BanquetCreateRequest.class));
+                .registerBanquet(any(), any());
+
+        Member member = new Member();
+        member.setMemberId(1L);
+        member.setRole(Role.PROMOTER);
+
+        given(banquetRepository.findMemberById(1L))
+                .willReturn(member);
 
         String jsonRequest = """
                 {
@@ -84,13 +86,13 @@ class BanquetApiControllerTest {
                             "banquetDate" : "2026-08-01",
                             "startTime" : "18:00",
                             "endTime" : "21:00",
-                            "promoterId" : 1,
-                            "venue" : "Chamber Hall"
+                            "venue" : "CHAMBER_HALL"
                         }
                 """;
 
         //when
-        mockMvc.perform(post("/api/banquets") // 요청 정보 만드는 메서드 -> perform()
+        mockMvc.perform(post("/api/banquets")// 요청 정보 만드는 메서드 -> perform()
+                        .header("X-Member-Id", "1")
                         .contentType(MediaType.APPLICATION_JSON) // 요청 헤더 설정(Content-type)
                         .content(jsonRequest)) // @RequestBody로 들어가는 내용 설정
                 .andDo(print()) // 콘솔찍을 메서드
