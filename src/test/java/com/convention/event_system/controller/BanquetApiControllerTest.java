@@ -42,7 +42,7 @@ class BanquetApiControllerTest {
                             "banquetDate" : "2026-08-01",
                             "startTime" : "18:00",
                             "endTime" : "21:00",
-                            "venue" : "Chamber Hall"
+                            "venue" : "Chamber_Hall"
                         }
                 """;
 
