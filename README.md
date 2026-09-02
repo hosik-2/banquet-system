@@ -51,6 +51,9 @@
 
 ## 8. 현재 구현 상태
 - 행사 등록 기능 구조 구현 중
+- Authentication: 현재 Spring Security 도입 전 단계로
+X-Member-Id Header 기반의 임시 인증 방식을 사용한다.
+
 
 ## 9. 향후 구현 계획
 - 행사 등록 기능 구현 완료

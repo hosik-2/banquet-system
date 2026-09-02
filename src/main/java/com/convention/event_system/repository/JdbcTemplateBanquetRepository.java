@@ -1,12 +1,13 @@
 package com.convention.event_system.repository;
 
 import com.convention.event_system.domain.Banquet;
+import com.convention.event_system.domain.BanquetSchedule;
 import com.convention.event_system.domain.Member;
+import com.convention.event_system.domain.Venue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.List;
 
 @Repository
 @Slf4j
@@ -39,14 +41,14 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
             //Statement.RETURN_GENERATED_KEYS 이게 DB에서 만들어주는 자동 증가 키값을 받아오겠다는 표시임 안그럼 에러남
 
             ps.setString(1, banquet.getBanquetName());
-            ps.setObject(2, banquet.getBanquetDate());
-            ps.setObject(3, banquet.getStartTime());
-            ps.setObject(4, banquet.getEndTime());
+            ps.setObject(2, banquet.getSchedule().getBanquetDate());
+            ps.setObject(3, banquet.getSchedule().getStartTime());
+            ps.setObject(4, banquet.getSchedule().getEndTime());
             ps.setLong(5, banquet.getPromoterId());
-            ps.setObject(6, banquet.getInChargeId() !=null ?
+            ps.setObject(6, banquet.getInChargeId() != null ?
                     banquet.getInChargeId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
-            ps.setString(7, banquet.getVenue());
-            ps.setObject(8, banquet.getGuarantee() !=null ?
+            ps.setString(7, banquet.getVenue().name());
+            ps.setObject(8, banquet.getGuarantee() != null ?
                     banquet.getGuarantee() : null);
 
 
@@ -54,7 +56,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
         }, keyHolder); // DB에서 넘겨줄 키값을 받을 키홀더도 update() 안에 선언해줘야 함
 
         long generatedId = keyHolder.getKey().longValue();
-        banquet.setBanquetId(generatedId);
+        banquet.assignId(generatedId);
         // DB에는 자동으로 id값이 선언되어 다른 쿼리문이랑 같이 한 번에 저장이 되기 때문에 이 작업은 update() 안에서 할 필요가 없음
         // 이 작업은 우리가 도메인에(자바에) 저장할 id값만 불러오는 작업이니까
 
@@ -62,27 +64,42 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
 
     }
 
-    @Override
-    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, String venue) {
-        //중복 검사를 위한 조회 메서드
+    @Override //행사 중복 여부를 위해 중복 날짜객체 반환
+    public List<BanquetSchedule> findSchedulesByDateAndVenue(LocalDate banquetDate, Venue venue) {
         String sql = """
-                SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
+                SELECT * FROM BANQUET WHERE banquet_date = ? AND venue = ?
                 """;
 
-        Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
-        //queryForObject() 는 조회가 단건일 때 쓰는 메서드임 기본 래퍼클래스를 받을 때는 저렇게 해주고 객체를 받을 때는 아래 참조
-        boolean result;
-        if (countForQuery > 0) result = true;
-        else result = false;
+        return jdbcTemplate.query(sql, (rs, rowNum) ->
+                        new BanquetSchedule(
+                                rs.getDate("banquet_date").toLocalDate(),
+                                rs.getTime("start_time").toLocalTime(),
+                                rs.getTime("end_time").toLocalTime()
+                        ),
+                banquetDate, venue);
 
-        return result;
     }
+
+
+//    @Override
+//    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, Venue venue) {
+//        //중복 검사를 위한 조회 메서드
+//        String sql = """
+//                SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
+//                """;
+//
+//        Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
+//        boolean result;
+//        if (countForQuery > 0) result = true;
+//        else result = false;
+//
+//        return result;
+//    }
 
     @Override
     public Member findMemberById(Long memberId) {
         String sql = "SELECT * FROM MEMBER WHERE member_id = ?";
         return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Member.class), memberId);
-        // 이것이 객체를 받을 때 쓰는 메서드 사용 방법임
     }
 
 

@@ -1,5 +1,6 @@
 package com.convention.event_system.dto;
 
+import com.convention.event_system.domain.Venue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -32,10 +33,6 @@ public class BanquetCreateRequest {
 
     @NotNull
     private LocalTime endTime;
-
-    @NotNull
-    private Long promoterId; // JSON데이터가 넘어올 때 멤버 객체 필드 전체를 받지 않을 거기 때문에 이름만 받고
-    //이름으로 id를 찾는 단계를 거쳐 id를 삽입
 
     private Long inChargeId; //널값 관련 검증 스티커가 없어서 널이 가능 -> 추후에 추가해도 문제 없음
 

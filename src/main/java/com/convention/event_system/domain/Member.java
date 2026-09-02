@@ -14,4 +14,6 @@ public class Member {
 
     private Department department;
 
+    private Role role;
+
 }
