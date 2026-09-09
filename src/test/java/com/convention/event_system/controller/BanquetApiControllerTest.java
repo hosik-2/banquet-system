@@ -65,7 +65,6 @@ class BanquetApiControllerTest {
 
     @Test
     void 중복_행사_등록시_400_반환() throws Exception {
-
         //given
         // void 메서드에서 예외를 발생시키기 위해 doThrow().when() 사용
         // 리턴값이 있는 메서드는 when().thenReturn() 사용
