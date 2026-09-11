@@ -1,5 +1,6 @@
 package com.convention.event_system.exception;
 
+import com.convention.event_system.auth.UnauthenticatedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,6 +32,13 @@ public class GlobalExceptionHandler {
 
         ErrorResponse badRequest = new ErrorResponse(LocalDateTime.now(), "BAD_REQUEST", HttpStatus.BAD_REQUEST, e.getMessage());
         return new ResponseEntity<>(badRequest, HttpStatus.BAD_REQUEST);
+
+        }
+
+        @ExceptionHandler(UnauthenticatedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthenticatedException(UnauthenticatedException e) {
+            ErrorResponse authenticationError = new ErrorResponse(LocalDateTime.now(), "AUTHENTICATION_ERROR", HttpStatus.UNAUTHORIZED, e.getMessage());
+            return new ResponseEntity<>(authenticationError, authenticationError.getStatus());
 
         }
 
