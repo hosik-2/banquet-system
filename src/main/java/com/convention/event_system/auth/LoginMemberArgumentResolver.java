@@ -22,7 +22,7 @@ public class LoginMemberArgumentResolver implements HandlerMethodArgumentResolve
     @Override
     //어떤 종류의 파라미터를 지원할 것인지 조건을 boolean값이 나오게 지정
     public boolean supportsParameter(MethodParameter parameter) {
-        return parameter.hasParameterAnnotation(com.convention.event_system.annotation.LoginMember.class) &&
+        return parameter.hasParameterAnnotation(CurrentMember.class) &&
                 parameter.getParameterType().equals(LoginMember.class);
     }
 

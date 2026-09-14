@@ -1,8 +1,9 @@
 package com.convention.event_system.controller;
 
-import com.convention.event_system.annotation.LoginMember;
+import com.convention.event_system.auth.CurrentMember;
 import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.service.BanquetService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,8 +23,8 @@ public class BanquetApiController {
     private final BanquetService banquetService;
 
     @PostMapping
-    public ResponseEntity<String> registerBanquet(@RequestBody BanquetCreateRequest dto,
-                                                  @LoginMember com.convention.event_system.auth.LoginMember actor) /*throws IllegalArgumentException*/ {
+    public ResponseEntity<String> registerBanquet(@RequestBody @Valid BanquetCreateRequest dto,
+                                                  @CurrentMember com.convention.event_system.auth.LoginMember actor) /*throws IllegalArgumentException*/ {
         //@RequestBody -> 없으면 URL쿼리 파라미터에서 값을 가져오려고 함 이게 있어야 JSON에서 가져온다 기억해라
         //참고로 form데이터는 @ModelAttribute다
         //ResponseEntity -> 이게 있어야 응답 정보에 데이터를 넣어 응답 메시지 작성이 가능하다 기억해라

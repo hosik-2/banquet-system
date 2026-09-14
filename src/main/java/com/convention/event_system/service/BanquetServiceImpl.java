@@ -25,11 +25,6 @@ public class BanquetServiceImpl implements BanquetService {
     @Override
     public void registerBanquet(BanquetCreateRequest request, LoginMember actor) {
 
-        //먼저 모든 로직 전에 NPE를 방지하기 위해서 먼저 널체크
-        if (request == null) {
-            throw new NullPointerException("request null");
-        }
-
         banquetPolicy.ensureCanRegister(actor);
 
         BanquetSchedule banquetSchedule = new BanquetSchedule(
