@@ -5,6 +5,8 @@ import com.convention.event_system.auth.LoginMemberArgumentResolver;
 import com.convention.event_system.domain.Department;
 import com.convention.event_system.domain.Member;
 import com.convention.event_system.domain.Role;
+import com.convention.event_system.exception.BusinessException;
+import com.convention.event_system.exception.ErrorCode;
 import com.convention.event_system.repository.MemberRepository;
 import com.convention.event_system.service.BanquetService;
 import org.junit.jupiter.api.Test;
@@ -181,6 +183,41 @@ class BanquetApiControllerTest {
                         .value("인증 정보가 올바르지 않습니다."))
                 .andExpect(jsonPath("$.errorCode")
                         .value("AUTHENTICATION_ERROR"));
+    }
+
+    @Test
+    void 등록_권한이_없으면_403_반환() throws Exception {
+        String jsonRequest = """
+                {
+                            "banquetName" : "test1",
+                            "banquetDate" : "2026-08-01",
+                            "startTime" : "18:00",
+                            "endTime" : "21:00",
+                            "venue" : "CHAMBER_HALL"
+                        }
+                """;
+
+        doThrow(new BusinessException(ErrorCode.BANQUET_REGISTER_FORBIDDEN))
+                .when(banquetService)
+                .registerBanquet(any(), any());
+
+        Member member = new Member();
+        member.setRole(Role.STAFF);
+        member.setMemberId(1L);
+
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+
+        mockMvc.perform(post("/api/banquets")
+                        .content(jsonRequest)
+                        .header("X-Member-Id", 1L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andDo(print())
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.errorCode")
+                        .value("BANQUET_REGISTER_FORBIDDEN"))
+                .andExpect(jsonPath("$.message")
+                        .value("행사를 등록할 권한이 없습니다."));
+
     }
 
 }
