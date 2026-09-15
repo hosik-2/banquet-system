@@ -3,6 +3,7 @@ package com.convention.event_system.dto;
 import com.convention.event_system.domain.Venue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -34,11 +35,13 @@ public class BanquetCreateRequest {
     @NotNull
     private LocalTime endTime;
 
+    @Positive
     private Long inChargeId; //널값 관련 검증 스티커가 없어서 널이 가능 -> 추후에 추가해도 문제 없음
 
     @NotBlank
     private String venue;
 
+    @Positive
     private Integer guarantee;
 
 }
