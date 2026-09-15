@@ -5,10 +5,8 @@ import com.convention.event_system.exception.BusinessException;
 import com.convention.event_system.exception.ErrorCode;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BanquetPolicyTest {
 

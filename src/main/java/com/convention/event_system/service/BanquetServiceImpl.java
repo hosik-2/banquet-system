@@ -6,6 +6,8 @@ import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.BanquetSchedule;
 import com.convention.event_system.domain.Venue;
 import com.convention.event_system.dto.BanquetCreateRequest;
+import com.convention.event_system.exception.BusinessException;
+import com.convention.event_system.exception.ErrorCode;
 import com.convention.event_system.repository.BanquetRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +25,7 @@ public class BanquetServiceImpl implements BanquetService {
 
 
     @Override
-    public void registerBanquet(BanquetCreateRequest request, LoginMember actor) {
+    public Long registerBanquet(BanquetCreateRequest request, LoginMember actor) {
 
         banquetPolicy.ensureCanRegister(actor);
 
@@ -42,17 +44,19 @@ public class BanquetServiceImpl implements BanquetService {
         // 비즈니스 규칙 검사
         for (BanquetSchedule existing : existingSchedules) {
             if (existing.overlaps(banquetSchedule)) {
-                throw new IllegalArgumentException("같은 날짜, 같은 베뉴, 같은 시간에 행사가 있습니다.");
+                throw new BusinessException(ErrorCode.BANQUET_DUPLICATE);
             }
         }
 
-        banquetRepository.save(Banquet.register(
+        Banquet banquet = banquetRepository.save(Banquet.register(
                 request.getBanquetName(),
                 banquetSchedule,
                 venue,
                 request.getGuarantee(),
                 actor.getId()
         ));
+
+        return banquet.getBanquetId();
 
     }
 }

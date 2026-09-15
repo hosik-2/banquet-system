@@ -62,6 +62,8 @@ class BanquetApiControllerTest {
         given(memberRepository.findById(1L))
                 .willReturn(Optional.of(member));
 
+        given(banquetService.registerBanquet(any(), any())).willReturn(member.getMemberId());
+
 
         mockMvc.perform(post("/api/banquets")
                         .header("X-Member-Id", "1")
@@ -69,7 +71,8 @@ class BanquetApiControllerTest {
                         .content(jsonRequest))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(content().string("행사 등록 완료."));
+                .andExpect(jsonPath("$.message").value("행사 생성 완료."))
+                .andExpect(jsonPath("$.banquetId").value(1L));
 
     }
 
@@ -85,7 +88,7 @@ class BanquetApiControllerTest {
                         }
                 """;
 
-        doThrow(new IllegalArgumentException("같은 날짜, 같은 베뉴에 행사가 있습니다."))
+        doThrow(new BusinessException(ErrorCode.BANQUET_DUPLICATE))
                 .when(banquetService)
                 .registerBanquet(any(), any());
 
