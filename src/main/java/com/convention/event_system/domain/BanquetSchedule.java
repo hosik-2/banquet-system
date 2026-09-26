@@ -4,11 +4,14 @@ import com.convention.event_system.exception.BusinessException;
 import com.convention.event_system.exception.ErrorCode;
 import lombok.Getter;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 @Getter
 public class BanquetSchedule {
+
+    public static final Duration MINIMUM_BUFFER_TIME = Duration.ofHours(2);
 
     private final LocalDate banquetDate;
     private final LocalTime startTime;

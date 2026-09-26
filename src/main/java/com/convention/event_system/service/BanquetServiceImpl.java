@@ -9,11 +9,11 @@ import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.exception.BusinessException;
 import com.convention.event_system.exception.ErrorCode;
 import com.convention.event_system.repository.BanquetRepository;
+import com.convention.event_system.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -22,9 +22,11 @@ public class BanquetServiceImpl implements BanquetService {
 
     private final BanquetRepository banquetRepository;
     private final BanquetPolicy banquetPolicy;
+    private final VenueRepository venueRepository;
 
 
     @Override
+    @Transactional
     public Long registerBanquet(BanquetCreateRequest request, LoginMember actor) {
 
         banquetPolicy.ensureCanRegister(actor);
@@ -38,15 +40,13 @@ public class BanquetServiceImpl implements BanquetService {
 
         Venue venue = Venue.valueOf(request.getVenue());
 
-        List<BanquetSchedule> existingSchedules =
-                banquetRepository.findSchedulesByDateAndVenue(banquetSchedule.getBanquetDate(), venue);
+        //venue
+        Long venueId = venueRepository.findIdForUpdate(venue);
 
-        // 비즈니스 규칙 검사
-        for (BanquetSchedule existing : existingSchedules) {
-            if (existing.overlaps(banquetSchedule)) {
-                throw new BusinessException(ErrorCode.BANQUET_DUPLICATE);
-            }
+        if (banquetRepository.existsOverlapping(venueId, banquetSchedule)) {
+            throw new BusinessException(ErrorCode.BANQUET_DUPLICATE);
         }
+
 
         Banquet banquet = banquetRepository.save(Banquet.register(
                 request.getBanquetName(),
@@ -54,7 +54,7 @@ public class BanquetServiceImpl implements BanquetService {
                 venue,
                 request.getGuarantee(),
                 actor.getId()
-        ));
+        ), venueId);
 
         return banquet.getBanquetId();
 

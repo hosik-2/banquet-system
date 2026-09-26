@@ -27,9 +27,8 @@ public class BanquetApiController {
     private final BanquetService banquetService;
 
     @PostMapping
-    public ResponseEntity<BanquetCreateResponse> registerBanquet(@RequestBody @Valid BanquetCreateRequest dto,
+    public ResponseEntity<BanquetCreateResponse> registerBanquet(@Valid @RequestBody BanquetCreateRequest dto,
                                                   @CurrentMember LoginMember actor) {
-
 
         Long banquetId = banquetService.registerBanquet(dto, actor);
         BanquetCreateResponse response = new BanquetCreateResponse(LocalDateTime.now(), banquetId, "행사 생성 완료.");

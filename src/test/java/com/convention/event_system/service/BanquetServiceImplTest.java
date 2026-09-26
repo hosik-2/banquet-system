@@ -10,6 +10,7 @@ import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.exception.BusinessException;
 import com.convention.event_system.exception.ErrorCode;
 import com.convention.event_system.repository.BanquetRepository;
+import com.convention.event_system.repository.VenueRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,8 +21,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.BDDMockito.*;
 
@@ -32,6 +32,8 @@ class BanquetServiceImplTest {
     private BanquetRepository banquetRepository;
     @Mock
     private BanquetPolicy banquetPolicy;
+    @Mock
+    private VenueRepository venueRepository;
     @InjectMocks
     private BanquetServiceImpl banquetService;
 
@@ -53,7 +55,7 @@ class BanquetServiceImplTest {
 
         //가짜 로그인 멤버
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
-        given(banquetRepository.save(any())).willReturn(banquet);
+        given(banquetRepository.save(any(), any())).willReturn(banquet);
 
         //when
         //then
@@ -74,18 +76,17 @@ class BanquetServiceImplTest {
         //가짜 로그인 멤버
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
 
-        //when
-        BanquetSchedule existingSchedule = new BanquetSchedule(
-                LocalDate.of(2026, 8, 1),
-                LocalTime.of(18, 00),
-                LocalTime.of(21, 00)
-        );
-        given(banquetRepository.findSchedulesByDateAndVenue(any(), any())).willReturn(List.of(existingSchedule));
+        given(venueRepository.findIdForUpdate(any(Venue.class))).willReturn(1L);
 
-        //then
-        assertThatThrownBy(() -> {
-            banquetService.registerBanquet(request, actor);
-        }).isInstanceOf(BusinessException.class);
+        given(banquetRepository.existsOverlapping(eq(1L), any(BanquetSchedule.class)))
+                .willReturn(true);
+
+        BusinessException exception = catchThrowableOfType(
+                () -> banquetService.registerBanquet(request, actor),
+                BusinessException.class
+        );
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_DUPLICATE);
 
     }
 

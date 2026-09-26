@@ -17,6 +17,8 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.List;
 
+import static com.convention.event_system.domain.BanquetSchedule.MINIMUM_BUFFER_TIME;
+
 @Repository
 @Slf4j
 @RequiredArgsConstructor
@@ -25,7 +27,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
     private final JdbcTemplate jdbcTemplate; // DB조작 도구임 주입 받고 쓰면 됌
 
     @Override
-    public Banquet save(Banquet banquet) {
+    public Banquet save(Banquet banquet, Long venueId) {
 //        커넥션 취득이나 나머지 자원 반환도 jdbcTemplate에서 알아서 해줌 그래서 템플릿을 주입 받아서 update(), query()
 //        같은 메서드로 커넥션 풀이나 다른 거 고민할 필요 없이 알아서 다 해주니 우리는 람다식에 커넥션이랑 자동증가값이 있다면
 //        그 인자만 잘 넘겨주고 preparedStatement 세팅만 잘 해줘서 람다식 안에서 그걸 리턴해주고 객체를 잘 넘기면 됌 ㅇㅋ?
@@ -34,7 +36,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
 
         String sql = """
                 INSERT INTO banquet (banquet_name, banquet_date, start_time, end_time, promoter_id, in_charge_id,
-                venue, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""";
+                venue_id, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""";
 
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -47,7 +49,7 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
             ps.setLong(5, banquet.getPromoterId());
             ps.setObject(6, banquet.getInChargeId() != null ?
                     banquet.getInChargeId() : null); // 위처럼 하면 널값이 들어오면 NPE터짐
-            ps.setString(7, banquet.getVenue().name());
+            ps.setLong(7, venueId);
             ps.setObject(8, banquet.getGuarantee() != null ?
                     banquet.getGuarantee() : null);
 
@@ -64,19 +66,25 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
 
     }
 
-    @Override //행사 중복 여부를 위해 중복 날짜객체 반환
-    public List<BanquetSchedule> findSchedulesByDateAndVenue(LocalDate banquetDate, Venue venue) {
+    @Override
+    public Boolean existsOverlapping(Long venueId, BanquetSchedule banquetSchedule) {
+
         String sql = """
-                SELECT * FROM BANQUET WHERE banquet_date = ? AND venue = ?
+                SELECT EXISTS (
+                SELECT 1
+                FROM banquet
+                WHERE venue_id = ?
+                AND banquet_date = ?
+                AND start_time < ?
+                AND end_time > ?
+                );
                 """;
 
-        return jdbcTemplate.query(sql, (rs, rowNum) ->
-                        new BanquetSchedule(
-                                rs.getDate("banquet_date").toLocalDate(),
-                                rs.getTime("start_time").toLocalTime(),
-                                rs.getTime("end_time").toLocalTime()
-                        ),
-                banquetDate, venue);
+        return Boolean.TRUE.equals(
+                jdbcTemplate.queryForObject(
+                        sql, Boolean.class, venueId, banquetSchedule.getBanquetDate(),
+                        banquetSchedule.getEndTime().plus(MINIMUM_BUFFER_TIME),
+                        banquetSchedule.getStartTime().minus(MINIMUM_BUFFER_TIME)));
 
     }
 
@@ -95,12 +103,5 @@ public class JdbcTemplateBanquetRepository implements BanquetRepository {
 //
 //        return result;
 //    }
-
-    @Override
-    public Member findMemberById(Long memberId) {
-        String sql = "SELECT * FROM MEMBER WHERE member_id = ?";
-        return jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(Member.class), memberId);
-    }
-
 
 }
