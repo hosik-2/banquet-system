@@ -2,6 +2,7 @@ package com.convention.event_system.dto;
 
 import com.convention.event_system.domain.Venue;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import lombok.AllArgsConstructor;
@@ -43,5 +44,9 @@ public class BanquetCreateRequest {
 
     @Positive
     private Integer guarantee;
+
+    @Positive
+    @NotNull
+    private Long version;
 
 }

@@ -1,6 +1,7 @@
 package com.convention.event_system.domain;
 
 import lombok.Getter;
+import org.springframework.data.relational.core.sql.In;
 
 @Getter
 public class Banquet {
@@ -18,6 +19,9 @@ public class Banquet {
     private final Venue venue; //TODO: to Enum
 
     private Integer guarantee;
+
+    private Long version;
+
 
     private Banquet(String banquetName, BanquetSchedule schedule, Venue venue, Integer guarantee, Long promoterId) {
         this.banquetName = banquetName;

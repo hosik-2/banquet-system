@@ -2,11 +2,8 @@ package com.convention.event_system.repository;
 
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.BanquetSchedule;
-import com.convention.event_system.domain.Member;
-import com.convention.event_system.domain.Venue;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
@@ -14,15 +11,13 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
-import java.time.LocalDate;
-import java.util.List;
 
 import static com.convention.event_system.domain.BanquetSchedule.MINIMUM_BUFFER_TIME;
 
 @Repository
 @Slf4j
 @RequiredArgsConstructor
-public class JdbcTemplateBanquetRepository implements BanquetRepository {
+public class JdbcBanquetRepository implements BanquetRepository {
 
     private final JdbcTemplate jdbcTemplate; // DB조작 도구임 주입 받고 쓰면 됌
 
