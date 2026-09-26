@@ -1,20 +1,18 @@
 package com.convention.event_system.config;
 
 import com.convention.event_system.auth.LoginMemberArgumentResolver;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.List;
 
-@Configuration //설정 정보 스티커
+@Configuration
+@RequiredArgsConstructor
 public class WebConfig implements WebMvcConfigurer {
 
     private final LoginMemberArgumentResolver loginMemberArgumentResolver;
-
-    public WebConfig(LoginMemberArgumentResolver loginMemberArgumentResolver) {
-        this.loginMemberArgumentResolver = loginMemberArgumentResolver;
-    }
 
     @Override
     public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {

@@ -1,5 +1,7 @@
 package com.convention.event_system.domain;
 
+import com.convention.event_system.exception.BusinessException;
+import com.convention.event_system.exception.ErrorCode;
 import lombok.Getter;
 
 import java.time.LocalDate;
@@ -15,7 +17,7 @@ public class BanquetSchedule {
     public BanquetSchedule(LocalDate banquetDate, LocalTime startTime, LocalTime endTime) {
 
         if (!startTime.isBefore(endTime)) {
-            throw new IllegalArgumentException("시작시간이 종료시간보다 빨라야 합니다.");
+            throw new BusinessException(ErrorCode.BANQUET_TIME_INVALID);
         }
 
         this.banquetDate = banquetDate;

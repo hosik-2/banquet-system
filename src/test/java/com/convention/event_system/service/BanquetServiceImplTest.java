@@ -2,10 +2,13 @@ package com.convention.event_system.service;
 
 import com.convention.event_system.auth.BanquetPolicy;
 import com.convention.event_system.auth.LoginMember;
+import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.BanquetSchedule;
 import com.convention.event_system.domain.Role;
 import com.convention.event_system.domain.Venue;
 import com.convention.event_system.dto.BanquetCreateRequest;
+import com.convention.event_system.exception.BusinessException;
+import com.convention.event_system.exception.ErrorCode;
 import com.convention.event_system.repository.BanquetRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +20,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.BDDMockito.*;
@@ -42,12 +46,18 @@ class BanquetServiceImplTest {
                 .venue("CHAMBER_HALL")
                 .build();
 
+        BanquetSchedule banquetSchedule = new BanquetSchedule(request.getBanquetDate(), request.getStartTime(), request.getEndTime());
+
+        Banquet banquet = Banquet.register(request.getBanquetName(), banquetSchedule, Venue.valueOf(request.getVenue()), null, 1L);
+        banquet.assignId(1L);
+
         //가짜 로그인 멤버
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
+        given(banquetRepository.save(any())).willReturn(banquet);
 
         //when
         //then
-        assertDoesNotThrow(() -> banquetService.registerBanquet(request, actor));
+        assertThat(banquetService.registerBanquet(request, actor)).isEqualTo(1L);
     }
 
     @Test
@@ -75,7 +85,7 @@ class BanquetServiceImplTest {
         //then
         assertThatThrownBy(() -> {
             banquetService.registerBanquet(request, actor);
-        }).isInstanceOf(IllegalArgumentException.class);
+        }).isInstanceOf(BusinessException.class);
 
     }
 
@@ -95,14 +105,14 @@ class BanquetServiceImplTest {
         LoginMember actor = new LoginMember(1L, Role.STAFF);
 
         //when
-        willThrow(new IllegalArgumentException("판촉자가 아니면 행사를 등록할 수 없습니다."))
+        willThrow(new BusinessException(ErrorCode.BANQUET_REGISTER_FORBIDDEN))
                 .given(banquetPolicy)
                 .ensureCanRegister(actor);
 
         //then
         assertThatThrownBy(() -> {
             banquetService.registerBanquet(request, actor);
-        }).isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("판촉자가 아니면 행사를 등록할 수 없습니다.");
+        }).isInstanceOf(BusinessException.class)
+                .hasMessage("행사를 등록할 권한이 없습니다.");
     }
 }
