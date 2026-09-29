@@ -1,7 +1,6 @@
 package com.convention.event_system.domain;
 
 import lombok.Getter;
-import org.springframework.data.relational.core.sql.In;
 
 @Getter
 public class Banquet {
@@ -16,11 +15,13 @@ public class Banquet {
 
     private Long inChargeId;
 
-    private final Venue venue; //TODO: to Enum
+    private final Venue venue;
 
     private Integer guarantee;
 
     private Long version;
+
+    private BanquetStatus status;
 
 
     private Banquet(String banquetName, BanquetSchedule schedule, Venue venue, Integer guarantee, Long promoterId) {
@@ -33,6 +34,18 @@ public class Banquet {
         // 여기서 인차지 아이디는 따로 메서드 생성, 판촉자는 로그인 정보에서 주입, 방켓아이디는 DB생성
     }
 
+    private Banquet(Long banquetId, String banquetName, BanquetSchedule schedule, Long promoterId, Long inChargeId, Venue venue, Integer guarantee, Long version, BanquetStatus status) {
+        this.banquetId = banquetId;
+        this.banquetName = banquetName;
+        this.schedule = schedule;
+        this.promoterId = promoterId;
+        this.inChargeId = inChargeId;
+        this.venue = venue;
+        this.guarantee = guarantee;
+        this.version = version;
+        this.status = status;
+    }
+
     public static Banquet register(String banquetName, BanquetSchedule schedule, Venue venue, Integer guarantee, Long promoterId) {
         return new Banquet(
                 banquetName,
@@ -41,6 +54,16 @@ public class Banquet {
                 guarantee,
                 promoterId
         );
+    }
+
+    public static Banquet restore(
+            Long banquetId, String banquetName, BanquetSchedule banquetSchedule,
+            Long promoterId, Long inChargeId, Venue venue,
+            Integer guarantee, Long version, BanquetStatus status
+    ) {
+        return new Banquet(
+                banquetId, banquetName, banquetSchedule,
+                promoterId, inChargeId, venue, guarantee, version, status);
     }
 
     public void assignId(Long banquetId) {

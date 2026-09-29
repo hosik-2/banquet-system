@@ -9,6 +9,8 @@ import com.convention.event_system.domain.Venue;
 import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.exception.BusinessException;
 import com.convention.event_system.exception.ErrorCode;
+import com.convention.event_system.query.AuditInfo;
+import com.convention.event_system.query.BanquetDetail;
 import com.convention.event_system.repository.BanquetRepository;
 import com.convention.event_system.repository.VenueRepository;
 import org.junit.jupiter.api.Test;
@@ -18,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.*;
@@ -114,4 +117,42 @@ class BanquetServiceImplTest {
         }).isInstanceOf(BusinessException.class)
                 .hasMessage("행사를 등록할 권한이 없습니다.");
     }
+
+    @Test
+    void 행사_단건_조회_성공() {
+
+        BanquetSchedule schedule = new BanquetSchedule(
+                LocalDate.of(2026, 10, 10),
+                LocalTime.of(10, 00, 00),
+                LocalTime.of(12, 00, 00)
+        );
+
+        Banquet banquet = Banquet.register(
+                "test1111",
+                schedule,
+                Venue.CAFE_TERRACE,
+                30,
+                1L
+        );
+
+        AuditInfo auditInfo = new AuditInfo(
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                1L,
+                1L
+        );
+
+        BanquetDetail expect = new BanquetDetail(banquet, auditInfo);
+
+        given(banquetRepository.findById(1L)).willReturn(expect);
+
+        BanquetDetail result = banquetService.getBanquetDetail(1L);
+
+        assertThat(result).isSameAs(expect);
+
+        assertThat(result.getBanquet().getVenue()).isEqualTo(Venue.CAFE_TERRACE);
+        assertThat(result.getAuditInfo().getCreatedBy()).isEqualTo(1L);
+        assertThat(result.getBanquet().getSchedule().getBanquetDate()).isEqualTo(LocalDate.of(2026, 10, 10));
+    }
+
 }

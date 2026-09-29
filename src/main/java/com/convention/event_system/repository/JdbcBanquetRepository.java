@@ -2,14 +2,21 @@ package com.convention.event_system.repository;
 
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.BanquetSchedule;
+import com.convention.event_system.domain.BanquetStatus;
+import com.convention.event_system.domain.Venue;
+import com.convention.event_system.query.AuditInfo;
+import com.convention.event_system.query.BanquetDetail;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 
 import static com.convention.event_system.domain.BanquetSchedule.MINIMUM_BUFFER_TIME;
@@ -83,20 +90,43 @@ public class JdbcBanquetRepository implements BanquetRepository {
 
     }
 
+    @Override
+    public BanquetDetail findById(Long banquetId) {
+        String sql = """
+                SELECT * FROM banquet b JOIN venue v
+                ON b.venue_id = v.venue_id WHERE banquet_id = ?
+                """;
 
-//    @Override
-//    public boolean existsByBanquetDateAndVenue(LocalDate banquetDate, Venue venue) {
-//        //중복 검사를 위한 조회 메서드
-//        String sql = """
-//                SELECT COUNT(*) FROM BANQUET WHERE banquet_date = ? AND venue = ?
-//                """;
-//
-//        Integer countForQuery = jdbcTemplate.queryForObject(sql, Integer.class, banquetDate, venue);
-//        boolean result;
-//        if (countForQuery > 0) result = true;
-//        else result = false;
-//
-//        return result;
-//    }
+        return jdbcTemplate.queryForObject(
+                sql, (rs, rowNum) -> mapBanquetDetail(rs), banquetId);
+    }
+
+    private static @NonNull BanquetDetail mapBanquetDetail(ResultSet rs) throws SQLException {
+        BanquetSchedule schedule = new BanquetSchedule(
+                rs.getDate("banquet_date").toLocalDate(),
+                rs.getTime("start_time").toLocalTime(),
+                rs.getTime("end_time").toLocalTime()
+        );
+        Banquet banquet = Banquet.restore(
+                rs.getLong("banquet_id"),
+                rs.getString("banquet_name"),
+                schedule,
+                rs.getLong("promoter_id"),
+                rs.getObject("in_charge_id", Long.class),
+                Venue.valueOf(rs.getString("venue")),
+                rs.getObject("guarantee", Integer.class),
+                rs.getLong("version"),
+                BanquetStatus.valueOf(rs.getString("status"))
+        );
+        AuditInfo auditInfo = new AuditInfo(
+                rs.getTimestamp("created_at").toLocalDateTime(),
+                rs.getTimestamp("updated_at").toLocalDateTime(),
+                rs.getLong("created_by"),
+                rs.getLong("updated_by")
+        );
+        BanquetDetail banquetDetail = new BanquetDetail(banquet, auditInfo);
+
+        return banquetDetail;
+    }
 
 }

@@ -8,6 +8,7 @@ import com.convention.event_system.domain.Venue;
 import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.exception.BusinessException;
 import com.convention.event_system.exception.ErrorCode;
+import com.convention.event_system.query.BanquetDetail;
 import com.convention.event_system.repository.BanquetRepository;
 import com.convention.event_system.repository.VenueRepository;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,14 @@ public class BanquetServiceImpl implements BanquetService {
         ), venueId);
 
         return banquet.getBanquetId();
+
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public BanquetDetail getBanquetDetail(Long banquetId) {
+
+        return banquetRepository.findById(banquetId);
 
     }
 }

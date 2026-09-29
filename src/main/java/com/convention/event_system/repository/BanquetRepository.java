@@ -1,13 +1,8 @@
 package com.convention.event_system.repository;
 
-import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.domain.BanquetSchedule;
-import com.convention.event_system.domain.Member;
-import com.convention.event_system.domain.Venue;
-
-import java.time.LocalDate;
-import java.util.List;
+import com.convention.event_system.query.BanquetDetail;
 
 //Repository는 DTO가 아닌 도메인(엔티티)를 주고받는 객체임 명심하셈
 public interface BanquetRepository {
@@ -20,6 +15,6 @@ public interface BanquetRepository {
 
     Boolean existsOverlapping(Long venueId, BanquetSchedule banquetSchedule);
 
-    //나머지 메서드는 추후 생성(지금은 행사 등록 기능 제작 먼저)
+    BanquetDetail findById(Long banquetId);
 
 }

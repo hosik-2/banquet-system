@@ -45,8 +45,5 @@ public class BanquetCreateRequest {
     @Positive
     private Integer guarantee;
 
-    @Positive
-    @NotNull
-    private Long version;
 
 }

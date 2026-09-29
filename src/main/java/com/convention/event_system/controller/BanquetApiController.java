@@ -2,18 +2,18 @@ package com.convention.event_system.controller;
 
 import com.convention.event_system.auth.CurrentMember;
 import com.convention.event_system.auth.LoginMember;
+import com.convention.event_system.domain.Banquet;
 import com.convention.event_system.dto.BanquetCreateRequest;
 import com.convention.event_system.dto.BanquetCreateResponse;
+import com.convention.event_system.dto.BanquetDetailResponse;
+import com.convention.event_system.query.BanquetDetail;
 import com.convention.event_system.service.BanquetService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 
@@ -28,7 +28,7 @@ public class BanquetApiController {
 
     @PostMapping
     public ResponseEntity<BanquetCreateResponse> registerBanquet(@Valid @RequestBody BanquetCreateRequest dto,
-                                                  @CurrentMember LoginMember actor) {
+                                                                 @CurrentMember LoginMember actor) {
 
         Long banquetId = banquetService.registerBanquet(dto, actor);
         BanquetCreateResponse response = new BanquetCreateResponse(LocalDateTime.now(), banquetId, "행사 생성 완료.");
@@ -37,4 +37,10 @@ public class BanquetApiController {
 
     }
 
+    @GetMapping("/{banquetId}")
+    public ResponseEntity<BanquetDetailResponse> getBanquetDetail(@PathVariable Long banquetId) {
+        BanquetDetail banquetDetail = banquetService.getBanquetDetail(banquetId);
+        BanquetDetailResponse response = BanquetDetailResponse.from(banquetDetail, "행사 조회 완료");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
 }
