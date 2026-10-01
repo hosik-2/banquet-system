@@ -69,7 +69,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
     }
 
     @Override
-    public Boolean existsOverlapping(Long venueId, BanquetSchedule banquetSchedule) {
+    public Boolean existsOverlappingForCreate(Long venueId, BanquetSchedule banquetSchedule) {
 
         String sql = """
                 SELECT EXISTS (
@@ -89,6 +89,59 @@ public class JdbcBanquetRepository implements BanquetRepository {
                         banquetSchedule.getStartTime().minus(MINIMUM_BUFFER_TIME)));
 
     }
+
+    @Override
+    public Boolean existsOverlappingForUpdate(Long banquetId, Long venueId, BanquetSchedule banquetSchedule) {
+        String sql = """
+                SELECT EXISTS (
+                SELECT 1
+                FROM banquet
+                WHERE venue_id = ?
+                AND banquet_date = ?
+                AND start_time < ?
+                AND end_time > ?
+                AND banquet_id <> ?
+                );
+                """;
+
+        return Boolean.TRUE.equals(
+                jdbcTemplate.queryForObject(
+                        sql, Boolean.class, venueId, banquetSchedule.getBanquetDate(),
+                        banquetSchedule.getEndTime().plus(MINIMUM_BUFFER_TIME),
+                        banquetSchedule.getStartTime().minus(MINIMUM_BUFFER_TIME),
+                        banquetId));
+
+    }
+
+    @Override
+    public Integer update(Long banquetId, Long venueId, Banquet banquet, Long version) {
+        String sql = """
+                UPDATE banquet
+                SET banquet_name = ?,
+                banquet_date = ?,
+                start_time = ?,
+                end_time = ?,
+                in_charge_id = ?,
+                venue_id = ?,
+                guarantee = ?,
+                updated_at = NOW(),
+                version = version + 1
+                WHERE banquet_id = ?
+                AND version = ?;
+                """;
+
+        return jdbcTemplate.update(sql, banquet.getBanquetName(),
+                banquet.getSchedule().getBanquetDate(),
+                banquet.getSchedule().getStartTime(),
+                banquet.getSchedule().getEndTime(),
+                banquet.getInChargeId(),
+                venueId,
+                banquet.getGuarantee(),
+                banquetId,
+                version);
+
+    }
+
 
     @Override
     public BanquetDetail findById(Long banquetId) {

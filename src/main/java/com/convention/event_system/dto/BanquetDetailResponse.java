@@ -33,7 +33,7 @@ public class BanquetDetailResponse {
 
     private Long inChargeId;
 
-    private Venue venue; //TODO: to Enum
+    private Venue venue;
 
     private Integer guarantee;
 

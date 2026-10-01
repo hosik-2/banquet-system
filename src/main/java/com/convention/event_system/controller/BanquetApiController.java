@@ -3,11 +3,10 @@ package com.convention.event_system.controller;
 import com.convention.event_system.auth.CurrentMember;
 import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.domain.Banquet;
-import com.convention.event_system.dto.BanquetCreateRequest;
-import com.convention.event_system.dto.BanquetCreateResponse;
-import com.convention.event_system.dto.BanquetDetailResponse;
+import com.convention.event_system.dto.*;
 import com.convention.event_system.query.BanquetDetail;
 import com.convention.event_system.service.BanquetService;
+import com.convention.event_system.service.result.BanquetUpdateResult;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,4 +42,18 @@ public class BanquetApiController {
         BanquetDetailResponse response = BanquetDetailResponse.from(banquetDetail, "행사 조회 완료");
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
+
+    @PutMapping("/{banquetId}")
+    public ResponseEntity<BanquetUpdateResponse> modifyBanquet(@PathVariable Long banquetId,
+                                                               @Valid @RequestBody BanquetUpdateRequest dto,
+                                                               @CurrentMember LoginMember actor) {
+        BanquetUpdateResult updateBanquet = banquetService.updateBanquet(banquetId, dto, actor);
+        BanquetUpdateResponse response = new BanquetUpdateResponse(
+                updateBanquet.getBanquetId(), updateBanquet.getVersion(), "행사 수정 완료.");
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+
 }
+
+

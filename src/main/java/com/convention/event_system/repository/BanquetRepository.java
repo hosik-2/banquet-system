@@ -13,7 +13,11 @@ public interface BanquetRepository {
     //boolean existsByBanquetDateAndVenue(LocalDate banquetDate, Venue venue);
     // 행사 등록 시 중복 검사를 위한 검증 메서드
 
-    Boolean existsOverlapping(Long venueId, BanquetSchedule banquetSchedule);
+    Boolean existsOverlappingForCreate(Long venueId, BanquetSchedule banquetSchedule);
+
+    Boolean existsOverlappingForUpdate(Long banquetId, Long venueId, BanquetSchedule banquetSchedule);
+
+    Integer update(Long banquetId, Long venueId, Banquet banquet, Long version);
 
     BanquetDetail findById(Long banquetId);
 

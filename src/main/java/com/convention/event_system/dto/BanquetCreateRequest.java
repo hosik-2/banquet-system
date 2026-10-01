@@ -40,7 +40,7 @@ public class BanquetCreateRequest {
     private Long inChargeId; //널값 관련 검증 스티커가 없어서 널이 가능 -> 추후에 추가해도 문제 없음
 
     @NotBlank
-    private String venue;
+    private Venue venue;
 
     @Positive
     private Integer guarantee;

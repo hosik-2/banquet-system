@@ -2,7 +2,9 @@ package com.convention.event_system.service;
 
 import com.convention.event_system.auth.LoginMember;
 import com.convention.event_system.dto.BanquetCreateRequest;
+import com.convention.event_system.dto.BanquetUpdateRequest;
 import com.convention.event_system.query.BanquetDetail;
+import com.convention.event_system.service.result.BanquetUpdateResult;
 
 public interface BanquetService {
 
@@ -11,4 +13,7 @@ public interface BanquetService {
 
     BanquetDetail getBanquetDetail(Long banquetId);
 
+    BanquetUpdateResult updateBanquet(Long banquetId, BanquetUpdateRequest request, LoginMember actor);
+
 }
+

@@ -7,7 +7,7 @@ public class Banquet {
 
     private Long banquetId; // 기본형 말고 래퍼클래스 쓰기(null값 허용 여부 -> PK필드는 래퍼클래스 쓰기)
 
-    private final String banquetName;
+    private String banquetName;
 
     private BanquetSchedule schedule;
 
@@ -15,7 +15,7 @@ public class Banquet {
 
     private Long inChargeId;
 
-    private final Venue venue;
+    private Venue venue;
 
     private Integer guarantee;
 
@@ -80,6 +80,22 @@ public class Banquet {
 
     public void changeGuarantee(Integer guarantee) {
         this.guarantee = guarantee;
+    }
+
+    public void rename(String banquetName) {
+        this.banquetName = banquetName;
+    }
+
+    public void changeVenue(Venue venue) {
+        this.venue = venue;
+    }
+
+    public void cancel() {
+        this.status = BanquetStatus.CANCELLED;
+    }
+
+    public void confirm() {
+        this.status = BanquetStatus.CONFIRMED;
     }
 }
 
