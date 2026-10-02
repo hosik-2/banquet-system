@@ -77,7 +77,7 @@ class BanquetApiControllerTest {
     }
 
     @Test
-    void 중복_행사_등록시_400_반환() throws Exception {
+    void 중복_행사_등록시_409_반환() throws Exception {
         String jsonRequest = """
                 {
                             "banquetName" : "test1",
@@ -104,11 +104,11 @@ class BanquetApiControllerTest {
                         .contentType(MediaType.APPLICATION_JSON) // 요청 헤더 설정(Content-type)
                         .content(jsonRequest)) // @RequestBody로 들어가는 내용 설정
                 .andDo(print()) // 콘솔찍을 메서드
-                .andExpect(status().isBadRequest()) //검증 메서드
+                .andExpect(status().isConflict()) //검증 메서드
                 .andExpect(jsonPath("$.errorCode")
                         .value("BANQUET_DUPLICATE"))
                 .andExpect(jsonPath("$.status")
-                        .value("400 BAD_REQUEST"));
+                        .value("409 CONFLICT"));
 
 
     }

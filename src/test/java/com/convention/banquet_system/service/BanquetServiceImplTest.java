@@ -46,12 +46,12 @@ class BanquetServiceImplTest {
                 .banquetDate(LocalDate.of(2026, 8, 1))
                 .startTime(LocalTime.of(18, 00))
                 .endTime(LocalTime.of(21, 00))
-                .venue("CHAMBER_HALL")
+                .venue(Venue.valueOf("CHAMBER_HALL"))
                 .build();
 
         BanquetSchedule banquetSchedule = new BanquetSchedule(request.getBanquetDate(), request.getStartTime(), request.getEndTime());
 
-        Banquet banquet = Banquet.register(request.getBanquetName(), banquetSchedule, Venue.valueOf(request.getVenue()), null, 1L);
+        Banquet banquet = Banquet.register(request.getBanquetName(), banquetSchedule, request.getVenue(), null, 1L);
         banquet.assignId(1L);
 
         //가짜 로그인 멤버
@@ -71,7 +71,7 @@ class BanquetServiceImplTest {
                 .banquetDate(LocalDate.of(2026, 8, 1))
                 .startTime(LocalTime.of(18, 00))
                 .endTime(LocalTime.of(21, 00))
-                .venue("CHAMBER_HALL")
+                .venue(Venue.valueOf("CHAMBER_HALL"))
                 .build();
 
         //가짜 로그인 멤버
@@ -79,7 +79,7 @@ class BanquetServiceImplTest {
 
         given(venueRepository.findIdForUpdate(any(Venue.class))).willReturn(1L);
 
-        given(banquetRepository.existsOverlapping(eq(1L), any(BanquetSchedule.class)))
+        given(banquetRepository.existsOverlappingForCreate(eq(1L), any(BanquetSchedule.class)))
                 .willReturn(true);
 
         BusinessException exception = catchThrowableOfType(
@@ -99,7 +99,7 @@ class BanquetServiceImplTest {
                 .banquetDate(LocalDate.of(2026, 8, 1))
                 .startTime(LocalTime.of(18, 00))
                 .endTime(LocalTime.of(20, 00))
-                .venue("CHAMBER_HALL")
+                .venue(Venue.valueOf("CHAMBER_HALL"))
                 .build();
 
         //가짜 로그인 멤버
