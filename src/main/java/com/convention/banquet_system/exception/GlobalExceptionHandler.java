@@ -13,8 +13,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(UnauthenticatedException.class)
     public ResponseEntity<ErrorResponse> handleUnauthenticatedException(UnauthenticatedException e) {
-        ErrorResponse authenticationError = new ErrorResponse(LocalDateTime.now(), "AUTHENTICATION_ERROR", HttpStatus.UNAUTHORIZED, e.getMessage());
-        return new ResponseEntity<>(authenticationError, authenticationError.getStatus());
+        ErrorResponse response = new ErrorResponse(LocalDateTime.now(), "AUTHENTICATION_ERROR", HttpStatus.UNAUTHORIZED, e.getMessage());
+        return new ResponseEntity<>(response, response.getStatus());
 
     }
 
@@ -23,5 +23,16 @@ public class GlobalExceptionHandler {
         ErrorCode errorCode = e.getErrorCode();
         ErrorResponse response = new ErrorResponse(LocalDateTime.now(), errorCode.name(), errorCode.getStatus(), errorCode.getMessage());
         return new ResponseEntity<>(response, errorCode.getStatus());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        ErrorResponse response = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.INTERNAL_SERVER_ERROR.toString(),
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "서버 오류입니다. 죄송합니다.");
+        return new ResponseEntity<>(response, response.getStatus());
+
     }
 }

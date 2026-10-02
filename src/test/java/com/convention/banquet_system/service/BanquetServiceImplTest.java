@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -153,6 +155,18 @@ class BanquetServiceImplTest {
         assertThat(result.getBanquet().getVenue()).isEqualTo(Venue.CAFE_TERRACE);
         assertThat(result.getAuditInfo().getCreatedBy()).isEqualTo(1L);
         assertThat(result.getBanquet().getSchedule().getBanquetDate()).isEqualTo(LocalDate.of(2026, 10, 10));
+    }
+
+    @Test
+    void 없는_행사_조회_시_404() {
+
+        given(banquetRepository.findById(123L)).willThrow(EmptyResultDataAccessException.class);
+
+        BusinessException exception = catchThrowableOfType(() ->
+                banquetService.getBanquetDetail(123L), BusinessException.class);
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_NOT_FOUND);
+
     }
 
 }

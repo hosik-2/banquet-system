@@ -14,6 +14,9 @@ import com.convention.banquet_system.repository.VenueRepository;
 import com.convention.banquet_system.service.result.BanquetUpdateResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,7 +66,13 @@ public class BanquetServiceImpl implements BanquetService {
     @Transactional(readOnly = true)
     public BanquetDetail getBanquetDetail(Long banquetId) {
 
-        return banquetRepository.findById(banquetId);
+        BanquetDetail detail;
+        try {
+            detail = banquetRepository.findById(banquetId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new BusinessException(ErrorCode.BANQUET_NOT_FOUND);
+        }
+        return detail;
 
     }
 
