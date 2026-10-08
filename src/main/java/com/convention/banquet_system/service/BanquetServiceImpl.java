@@ -79,7 +79,13 @@ public class BanquetServiceImpl implements BanquetService {
     @Override
     @Transactional
     public BanquetUpdateResult updateBanquet(Long banquetId, BanquetUpdateRequest request, LoginMember actor) {
-        BanquetDetail banquetDetail = banquetRepository.findById(banquetId);
+
+        BanquetDetail banquetDetail;
+        try {
+            banquetDetail = banquetRepository.findById(banquetId);
+        } catch (EmptyResultDataAccessException e) {
+            throw new BusinessException(ErrorCode.BANQUET_NOT_FOUND);
+        }
 
         Banquet banquet = banquetDetail.getBanquet();
         banquetPolicy.ensureCanModifyBanquet(actor, banquet.getPromoterId());

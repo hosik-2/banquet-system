@@ -356,4 +356,26 @@ class BanquetServiceImplTest {
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_MODIFIED);
     }
 
+    @Test
+    void 존재하지_않는_행사_수정_시_BANQUET_NOT_FOUND() {
+        LoginMember actor = new LoginMember(10L, Role.PROMOTER);
+
+
+        BanquetUpdateRequest updateRequest = new BanquetUpdateRequest(
+                "test1",
+                LocalDate.now(),
+                LocalTime.of(10, 0),
+                LocalTime.of(20, 0),
+                null,
+                Venue.CHAMBER_HALL,
+                null, 1L
+        );
+
+
+        given(banquetRepository.findById(10L)).willThrow(EmptyResultDataAccessException.class);
+
+        BusinessException exception = catchThrowableOfType(() -> banquetService.updateBanquet(10L, updateRequest, actor), BusinessException.class);
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_NOT_FOUND);
+    }
+
 }
