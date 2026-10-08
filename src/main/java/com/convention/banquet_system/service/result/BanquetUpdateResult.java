@@ -1,8 +1,6 @@
 package com.convention.banquet_system.service.result;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Getter
 @NoArgsConstructor

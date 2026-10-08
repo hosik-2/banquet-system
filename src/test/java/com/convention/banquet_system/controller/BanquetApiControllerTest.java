@@ -9,6 +9,7 @@ import com.convention.banquet_system.exception.BusinessException;
 import com.convention.banquet_system.exception.ErrorCode;
 import com.convention.banquet_system.repository.MemberRepository;
 import com.convention.banquet_system.service.BanquetService;
+import com.convention.banquet_system.service.result.BanquetUpdateResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -23,8 +24,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(BanquetApiController.class)
 @Import({LoginMemberArgumentResolver.class, HeaderLoginMemberProvider.class})
@@ -221,6 +224,78 @@ class BanquetApiControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("행사를 등록할 권한이 없습니다."));
 
+    }
+
+    @Test
+    void 수정_성공시_200_반환() throws Exception {
+
+        String jsonRequest = """
+                {
+                            "banquetName" : "test1",
+                            "banquetDate" : "2026-08-01",
+                            "startTime" : "18:00",
+                            "endTime" : "21:00",
+                            "venue" : "CHAMBER_HALL",
+                            "version" : 0
+                        }
+                """;
+
+        Member member = new Member();
+        member.setMemberId(1L);
+        member.setDepartment(Department.Convention);
+        member.setRole(Role.PROMOTER);
+        member.setMemberName("testPromoter");
+
+        BanquetUpdateResult result = new BanquetUpdateResult(1L, 1L);
+
+        given(banquetService.updateBanquet(any(), any(), any())).willReturn(result);
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+
+        mockMvc.perform(put("/api/banquets/1")
+                        .header("X-Member-Id", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.banquetId")
+                        .value(1L))
+                .andExpect(jsonPath("$.message")
+                        .value("행사 수정 완료."))
+                .andExpect(jsonPath("$.version")
+                        .value(1L));
+    }
+
+    @Test
+    void version_다른_요청_시_409() throws Exception {
+        String jsonRequest = """
+                {
+                            "banquetName" : "test1",
+                            "banquetDate" : "2026-08-01",
+                            "startTime" : "18:00",
+                            "endTime" : "21:00",
+                            "venue" : "CHAMBER_HALL",
+                            "version" : 1
+                        }
+                """;
+
+        Member member = new Member();
+        member.setMemberId(1L);
+        member.setDepartment(Department.Convention);
+        member.setRole(Role.PROMOTER);
+        member.setMemberName("testPromoter");
+
+        given(banquetService.updateBanquet(any(), any(), any()))
+                .willThrow(new BusinessException(ErrorCode.CONFLICT_MODIFIED));
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+
+        mockMvc.perform(put("/api/banquets/1")
+                        .header("X-Member-Id", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.message")
+                        .value("다른 사용자에 의해 행사가 수정되었습니다. 최신 정보를 다시 조회해 주세요."));
     }
 
 }

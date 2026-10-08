@@ -90,6 +90,9 @@ public class Banquet {
         this.venue = venue;
     }
 
+    public void assignVersion(Long version) {
+        this.version = version;}
+
     public void cancel() {
         this.status = BanquetStatus.CANCELLED;
     }
