@@ -298,4 +298,37 @@ class BanquetApiControllerTest {
                         .value("다른 사용자에 의해 행사가 수정되었습니다. 최신 정보를 다시 조회해 주세요."));
     }
 
+    @Test
+    void validation_검증() throws Exception {
+
+        String jsonRequest = """
+                {
+                            "banquetName" : "test1",
+                            "banquetDate" : "2026-08-01",
+                            "startTime" : "18:00",
+                            "endTime" : "21:00",
+                            "version" : 0
+                        }
+                """;
+
+        Member member = new Member();
+        member.setMemberId(1L);
+        member.setDepartment(Department.Convention);
+        member.setRole(Role.PROMOTER);
+        member.setMemberName("testPromoter");
+
+        BanquetUpdateResult result = new BanquetUpdateResult(1L, 1L);
+
+        given(banquetService.updateBanquet(any(), any(), any())).willReturn(result);
+        given(memberRepository.findById(1L)).willReturn(Optional.of(member));
+
+        mockMvc.perform(put("/api/banquets/1")
+                        .header("X-Member-Id", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andDo(print())
+                .andExpect(status().isBadRequest());
+
+    }
+
 }

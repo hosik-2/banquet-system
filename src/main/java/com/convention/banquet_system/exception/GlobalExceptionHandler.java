@@ -3,6 +3,7 @@ package com.convention.banquet_system.exception;
 import com.convention.banquet_system.auth.UnauthenticatedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,8 +26,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, errorCode.getStatus());
     }
 
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+        ErrorResponse response = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.BAD_REQUEST.toString(),
+                HttpStatus.BAD_REQUEST,
+                "잘못된 요청입니다. 요청 정보를 다시 확인해주세요."
+        );
+        return new ResponseEntity<>(response, response.getStatus());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
+
         ErrorResponse response = new ErrorResponse(
                 LocalDateTime.now(),
                 HttpStatus.INTERNAL_SERVER_ERROR.toString(),
