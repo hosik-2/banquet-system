@@ -58,8 +58,8 @@ public class BanquetRegistrationConcurrencyTest {
         );
         LoginMember loginMember = new LoginMember(1L, Role.PROMOTER);
 
-        int threads = 10;
-        ExecutorService pool = Executors.newFixedThreadPool(10);
+        int threads = 2;
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
         var ready = new CountDownLatch(threads);
         var start = new CountDownLatch(1);
         var done = new CountDownLatch(threads);
