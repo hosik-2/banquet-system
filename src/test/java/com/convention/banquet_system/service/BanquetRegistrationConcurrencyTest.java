@@ -1,13 +1,11 @@
 package com.convention.banquet_system.service;
 
-import com.convention.banquet_system.auth.BanquetPolicy;
 import com.convention.banquet_system.auth.LoginMember;
 import com.convention.banquet_system.domain.Role;
 import com.convention.banquet_system.domain.Venue;
 import com.convention.banquet_system.dto.BanquetCreateRequest;
 import com.convention.banquet_system.exception.BusinessException;
-import com.convention.banquet_system.repository.BanquetRepository;
-import com.convention.banquet_system.repository.VenueRepository;
+import com.convention.banquet_system.exception.ErrorCode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,12 +25,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SpringBootTest
 public class BanquetRegistrationConcurrencyTest {
 
-    @Autowired
-    private BanquetRepository banquetRepository;
-    @Autowired
-    private BanquetPolicy banquetPolicy;
-    @Autowired
-    private VenueRepository venueRepository;
     @Autowired
     private BanquetService banquetService;
     @Autowired
@@ -58,12 +50,13 @@ public class BanquetRegistrationConcurrencyTest {
         );
         LoginMember loginMember = new LoginMember(1L, Role.PROMOTER);
 
-        int threads = 2;
+        int threads = 10;
         ExecutorService pool = Executors.newFixedThreadPool(threads);
         var ready = new CountDownLatch(threads);
         var start = new CountDownLatch(1);
         var done = new CountDownLatch(threads);
         var success = new AtomicInteger(0);
+        var failed = new AtomicInteger(0);
 
         for (int i = 0; i < threads; i++) {
             pool.submit(() -> {
@@ -72,8 +65,14 @@ public class BanquetRegistrationConcurrencyTest {
                     start.await();
                     banquetService.registerBanquet(createRequest, loginMember);
                     success.incrementAndGet(); //등록이 성공하면 여기까지 내려옴
-                } catch (BusinessException | InterruptedException e) {
+                } catch (BusinessException e) {
                     System.out.println(e.toString());
+                    if (e.getErrorCode() == ErrorCode.BANQUET_DUPLICATE) {
+                        failed.incrementAndGet();
+                    }
+                } catch (InterruptedException e) {
+                    System.out.println(e.toString());
+                    Thread.currentThread().interrupt();
                 } finally {
                     done.countDown();
                 }
@@ -86,6 +85,7 @@ public class BanquetRegistrationConcurrencyTest {
         pool.shutdown();
         assertThat(success.get()).isEqualTo(1);
         assertThat(result).isTrue();
+        assertThat(failed.get()).isEqualTo(9);
 
     }
 
