@@ -4,8 +4,10 @@ import com.convention.banquet_system.auth.BanquetPolicy;
 import com.convention.banquet_system.auth.LoginMember;
 import com.convention.banquet_system.domain.Banquet;
 import com.convention.banquet_system.domain.BanquetSchedule;
+import com.convention.banquet_system.domain.BanquetStatus;
 import com.convention.banquet_system.dto.BanquetCreateRequest;
 import com.convention.banquet_system.dto.BanquetUpdateRequest;
+import com.convention.banquet_system.dto.ChangeStatusRequest;
 import com.convention.banquet_system.exception.BusinessException;
 import com.convention.banquet_system.exception.ErrorCode;
 import com.convention.banquet_system.query.BanquetDetail;
@@ -112,5 +114,29 @@ public class BanquetServiceImpl implements BanquetService {
             throw new BusinessException(ErrorCode.CONFLICT_MODIFIED);
         }
         return new BanquetUpdateResult(banquetId, request.getVersion() + 1);
+    }
+
+    @Override
+    @Transactional
+    public Long updateBanquetStatus(Long banquetId, ChangeStatusRequest request, LoginMember actor) {
+
+        Banquet banquet = getBanquetDetail(banquetId).getBanquet();
+        Long promoterId = banquet.getPromoterId();
+        banquetPolicy.ensureCanChangeStatus(actor, promoterId);
+
+        switch (request.getStatus()) {
+            case CANCELLED -> banquet.cancel();
+            case COMPLETED -> banquet.complete();
+            case CONFIRMED -> banquet.confirm();
+            default -> throw new BusinessException(ErrorCode.INVALID_STATUS_TRANSITION);
+        }
+
+        Integer updated = banquetRepository.changeStatus(banquetId, banquet.getStatus(), request.getVersion());
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.CONFLICT_MODIFIED);
+        }
+
+        return request.getVersion() + 1L;
+
     }
 }

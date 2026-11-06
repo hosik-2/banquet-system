@@ -154,6 +154,19 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 sql, (rs, rowNum) -> mapBanquetDetail(rs), banquetId);
     }
 
+    @Override
+    public Integer changeStatus(Long banquetId, BanquetStatus status, Long version) {
+
+        String sql = """
+                UPDATE banquet SET status = ?, version = version + 1 WHERE banquet_id = ? AND version = ?;
+                """;
+
+        return jdbcTemplate.update(sql, status, banquetId, version);
+
+    }
+
+
+
     private static @NonNull BanquetDetail mapBanquetDetail(ResultSet rs) throws SQLException {
         BanquetSchedule schedule = new BanquetSchedule(
                 rs.getDate("banquet_date").toLocalDate(),
