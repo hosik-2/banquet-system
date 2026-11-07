@@ -97,9 +97,12 @@ public class Banquet {
     }
 
     public void assignVersion(Long version) {
-        this.version = version;}
+        this.version = version;
+    }
 
-    /** 상태 전이 규칙은 도메인의 책임으로 구현함 */
+    /**
+     * 상태 전이 규칙은 도메인의 책임으로 구현함
+     */
     public void cancel() {
         if (status == BanquetStatus.COMPLETED || status == BanquetStatus.CANCELLED) {
             throw new BusinessException(ErrorCode.INVALID_STATUS_TRANSITION);

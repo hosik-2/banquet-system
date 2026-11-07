@@ -1,0 +1,135 @@
+package com.convention.banquet_system.domain;
+
+import com.convention.banquet_system.exception.BusinessException;
+import com.convention.banquet_system.exception.ErrorCode;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+import static org.assertj.core.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+class BanquetTest {
+
+    @Test
+    void confirm_성공() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        Banquet banquet = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.PENDING);
+
+        banquet.confirm();
+        BanquetStatus status = banquet.getStatus();
+        assertThat(status).isEqualTo(BanquetStatus.CONFIRMED);
+    }
+
+    @Test
+    void confirm_실패() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        Banquet banquet = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.CANCELLED);
+
+        BusinessException exception = catchThrowableOfType(() -> banquet.confirm(), BusinessException.class);
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+    }
+
+    @Test
+    void cancel_성공() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        Banquet banquet = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.PENDING);
+
+        banquet.cancel();
+        BanquetStatus status = banquet.getStatus();
+        assertThat(status).isEqualTo(BanquetStatus.CANCELLED);
+    }
+
+    @Test
+    void cancel_실패() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        Banquet banquet1 = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.COMPLETED);
+        Banquet banquet2 = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.CANCELLED);
+
+        BusinessException exception1 = catchThrowableOfType(() -> banquet1.cancel(), BusinessException.class);
+        BusinessException exception2 = catchThrowableOfType(() -> banquet2.cancel(), BusinessException.class);
+
+        assertThat(exception1.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(exception2.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+
+    }
+
+    @Test
+    void complete_성공() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        Banquet banquet = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.CONFIRMED);
+
+        banquet.complete();
+        BanquetStatus status = banquet.getStatus();
+        assertThat(status).isEqualTo(BanquetStatus.COMPLETED);
+    }
+
+    @Test
+    void complete_실패() {
+        BanquetSchedule banquetSchedule1 = new BanquetSchedule(
+                LocalDate.of(2099, 11, 6),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        BanquetSchedule banquetSchedule2 = new BanquetSchedule(
+                LocalDate.now().minusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(18, 0));
+        Banquet banquet1 = Banquet.restore(
+                1L, "test",
+                banquetSchedule1, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.CONFIRMED);
+        Banquet banquet2 = Banquet.restore(
+                1L, "test",
+                banquetSchedule2, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.CANCELLED);
+
+        BusinessException exception1 = catchThrowableOfType(() -> banquet1.complete(), BusinessException.class);
+        BusinessException exception2 = catchThrowableOfType(() -> banquet2.complete(), BusinessException.class);
+
+        assertThat(exception1.getErrorCode()).isEqualTo(ErrorCode.BANQUET_TIME_INVALID);
+        assertThat(exception2.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+    }
+}
