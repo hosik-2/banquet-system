@@ -2,14 +2,13 @@ package com.convention.banquet_system.domain;
 
 import com.convention.banquet_system.exception.BusinessException;
 import com.convention.banquet_system.exception.ErrorCode;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 class BanquetTest {
 
@@ -58,9 +57,18 @@ class BanquetTest {
                 null, Venue.BRISE_HALL,
                 null, 1L, BanquetStatus.PENDING);
 
+        Banquet banquet2 = Banquet.restore(
+                1L, "test",
+                banquetSchedule, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.CONFIRMED);
+
         banquet.cancel();
+        banquet2.cancel();
         BanquetStatus status = banquet.getStatus();
+        BanquetStatus status2 = banquet2.getStatus();
         assertThat(status).isEqualTo(BanquetStatus.CANCELLED);
+        assertThat(status2).isEqualTo(BanquetStatus.CANCELLED);
     }
 
     @Test
@@ -115,6 +123,7 @@ class BanquetTest {
                 LocalDate.now().minusDays(1),
                 LocalTime.of(10, 0),
                 LocalTime.of(18, 0));
+
         Banquet banquet1 = Banquet.restore(
                 1L, "test",
                 banquetSchedule1, 1L,
@@ -125,11 +134,21 @@ class BanquetTest {
                 banquetSchedule2, 1L,
                 null, Venue.BRISE_HALL,
                 null, 1L, BanquetStatus.CANCELLED);
+        Banquet banquet3 = Banquet.restore(
+                1L, "test",
+                banquetSchedule2, 1L,
+                null, Venue.BRISE_HALL,
+                null, 1L, BanquetStatus.PENDING);
 
+        // 행사 종료시간이 지나지 않은 시점에 complete() 예외 발생
         BusinessException exception1 = catchThrowableOfType(() -> banquet1.complete(), BusinessException.class);
+        // CANCELLED 상테에서 complete() 예외 발생
         BusinessException exception2 = catchThrowableOfType(() -> banquet2.complete(), BusinessException.class);
+        // PENDING 상테에서 complete() 예외 발생
+        BusinessException exception3 = catchThrowableOfType(() -> banquet3.complete(), BusinessException.class);
 
         assertThat(exception1.getErrorCode()).isEqualTo(ErrorCode.BANQUET_TIME_INVALID);
         assertThat(exception2.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        assertThat(exception3.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
     }
 }

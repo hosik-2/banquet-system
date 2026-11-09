@@ -30,4 +30,6 @@ class BanquetPolicyTest {
         Assertions.assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_REGISTER_FORBIDDEN);
 
     }
+
+
 }

@@ -2,12 +2,10 @@ package com.convention.banquet_system.service;
 
 import com.convention.banquet_system.auth.BanquetPolicy;
 import com.convention.banquet_system.auth.LoginMember;
-import com.convention.banquet_system.domain.Banquet;
-import com.convention.banquet_system.domain.BanquetSchedule;
-import com.convention.banquet_system.domain.Role;
-import com.convention.banquet_system.domain.Venue;
+import com.convention.banquet_system.domain.*;
 import com.convention.banquet_system.dto.BanquetCreateRequest;
 import com.convention.banquet_system.dto.BanquetUpdateRequest;
+import com.convention.banquet_system.dto.ChangeStatusRequest;
 import com.convention.banquet_system.exception.BusinessException;
 import com.convention.banquet_system.exception.ErrorCode;
 import com.convention.banquet_system.query.AuditInfo;
@@ -25,6 +23,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.NoSuchElementException;
 
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.BDDMockito.*;
@@ -376,6 +375,96 @@ class BanquetServiceImplTest {
 
         BusinessException exception = catchThrowableOfType(() -> banquetService.updateBanquet(10L, updateRequest, actor), BusinessException.class);
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_NOT_FOUND);
+    }
+
+    @Test
+    void 행사_상태_변경_성공() {
+        //given
+        BanquetSchedule schedule = new BanquetSchedule(
+                LocalDate.of(2026, 10, 10),
+                LocalTime.of(10, 0, 0),
+                LocalTime.of(12, 0, 0)
+        );
+        Banquet banquet = Banquet.restore(
+                1L, "test1111", schedule, 1L, null,
+                Venue.CAFE_TERRACE, 30, 3L, BanquetStatus.PENDING);
+
+        AuditInfo auditInfo = new AuditInfo(LocalDateTime.now(), LocalDateTime.now(), 1L, 1L);
+        BanquetDetail banquetDetail = new BanquetDetail(banquet, auditInfo);
+
+        ChangeStatusRequest request = new ChangeStatusRequest(3L, BanquetStatus.CONFIRMED);
+        LoginMember actor = new LoginMember(1L, Role.PROMOTER);
+
+        given(banquetRepository.changeStatus(1L, BanquetStatus.CONFIRMED, 3L))
+                .willReturn(1);
+        given(banquetRepository.findById(1L)).willReturn(banquetDetail);
+
+        //when
+        Long updatedVersion = banquetService.updateBanquetStatus(1L, request, actor);
+
+        //then
+        assertThat(updatedVersion).isEqualTo(4L);
+        verify(banquetRepository).changeStatus(eq(1L), eq(BanquetStatus.CONFIRMED), eq(3L));
+
+    }
+
+    @Test
+    void 상태_변경_업데이트_0건이면_CONFLICT_MODIFIED() {
+        //given
+        BanquetSchedule schedule = new BanquetSchedule(
+                LocalDate.of(2026, 10, 10),
+                LocalTime.of(10, 0, 0),
+                LocalTime.of(12, 0, 0)
+        );
+        Banquet banquet = Banquet.restore(
+                1L, "test1111", schedule, 1L, null,
+                Venue.CAFE_TERRACE, 30, 3L, BanquetStatus.PENDING);
+
+        AuditInfo auditInfo = new AuditInfo(LocalDateTime.now(), LocalDateTime.now(), 1L, 1L);
+        BanquetDetail banquetDetail = new BanquetDetail(banquet, auditInfo);
+
+        ChangeStatusRequest request = new ChangeStatusRequest(3L, BanquetStatus.CONFIRMED);
+        LoginMember actor = new LoginMember(1L, Role.PROMOTER);
+
+        given(banquetRepository.findById(1L)).willReturn(banquetDetail);
+        given(banquetRepository.changeStatus(1L, BanquetStatus.CONFIRMED, 3L))
+                .willReturn(0);
+
+        //then
+        BusinessException exception = catchThrowableOfType(() -> banquetService.updateBanquetStatus(1L, request, actor), BusinessException.class);
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_MODIFIED);
+        verify(banquetRepository).changeStatus(eq(1L), eq(BanquetStatus.CONFIRMED), eq(3L));
+
+    }
+
+    @Test
+    void 변경_요청_PENDING이면_INVALID_STATUS_TRANSITION() {
+        //given
+        BanquetSchedule schedule = new BanquetSchedule(
+                LocalDate.of(2026, 10, 10),
+                LocalTime.of(10, 0, 0),
+                LocalTime.of(12, 0, 0)
+        );
+        Banquet banquet = Banquet.restore(
+                1L, "test1111", schedule, 1L, null,
+                Venue.CAFE_TERRACE, 30, 3L, BanquetStatus.PENDING);
+
+        AuditInfo auditInfo = new AuditInfo(LocalDateTime.now(), LocalDateTime.now(), 1L, 1L);
+        BanquetDetail banquetDetail = new BanquetDetail(banquet, auditInfo);
+
+        ChangeStatusRequest request = new ChangeStatusRequest(3L, BanquetStatus.PENDING);
+        LoginMember actor = new LoginMember(1L, Role.PROMOTER);
+
+        given(banquetRepository.findById(1L)).willReturn(banquetDetail);
+
+        //when
+        BusinessException exception = catchThrowableOfType(() -> banquetService.updateBanquetStatus(1L, request, actor), BusinessException.class);
+
+        //then
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
+        verify(banquetRepository, never()).changeStatus(any(), any(), any());
+
     }
 
 }
