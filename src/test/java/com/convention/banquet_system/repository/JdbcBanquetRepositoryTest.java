@@ -1,22 +1,25 @@
 package com.convention.banquet_system.repository;
 
-import com.convention.banquet_system.domain.Banquet;
-import com.convention.banquet_system.domain.BanquetSchedule;
-import com.convention.banquet_system.domain.Venue;
+import com.convention.banquet_system.domain.*;
 import com.convention.banquet_system.query.BanquetDetail;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.PreparedStatement;
+import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
 import static org.assertj.core.api.Assertions.*;
 
 @SpringBootTest
+@ActiveProfiles("test")
 @Transactional
 class JdbcBanquetRepositoryTest {
 
@@ -28,14 +31,29 @@ class JdbcBanquetRepositoryTest {
 
     @Test
     void 단건_행사_조회_성공() {
+        String createMember = """
+                INSERT INTO member (member_name, department, role)
+                VALUES ('member1', ?, ?);
+                """;
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(createMember, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setString(1, Department.Convention.name());
+            ps.setString(2, Role.PROMOTER.name());
+
+            return ps;
+        }, keyHolder);
+
+        long memberId = keyHolder.getKey().longValue();
 
         String sql = """
             INSERT INTO banquet (
                 banquet_id, banquet_name, banquet_date, start_time, end_time, promoter_id, venue_id)
-                VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', 1, 1);
+                VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', ?, 1);
             """;
 
-        jdbcTemplate.update(sql);
+        jdbcTemplate.update(sql, memberId);
 
         BanquetDetail banquetDetail = banquetRepository.findById(10L);
 
@@ -53,15 +71,32 @@ class JdbcBanquetRepositoryTest {
 
     @Test
     void 행사_수정_성공() {
+
+        String createMember = """
+                INSERT INTO member (member_name, department, role)
+                VALUES ('member1', ?, ?);
+                """;
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(createMember, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setString(1, Department.Convention.name());
+            ps.setString(2, Role.PROMOTER.name());
+
+            return ps;
+        }, keyHolder);
+
+        long memberId = keyHolder.getKey().longValue();
+
         String venueSelectSql = "SELECT venue_id FROM venue WHERE venue = ?";
         Long venueId = jdbcTemplate.queryForObject(venueSelectSql, Long.class, Venue.MAJESTIC_BALLROOM.name());
 
         String sql = """
             INSERT INTO banquet (
                 banquet_id, banquet_name, banquet_date, start_time, end_time, promoter_id, venue_id)
-                VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', 1, ?);
+                VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', ?, ?);
             """;
-        jdbcTemplate.update(sql, venueId);
+        jdbcTemplate.update(sql, memberId, venueId);
 
         BanquetSchedule banquetSchedule = new BanquetSchedule(
                 LocalDate.of(2026, 10, 10),
@@ -88,15 +123,31 @@ class JdbcBanquetRepositoryTest {
 
     @Test
     void version_차이로_수정_거부() {
+        String createMember = """
+                INSERT INTO member (member_name, department, role)
+                VALUES ('member1', ?, ?);
+                """;
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(createMember, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setString(1, Department.Convention.name());
+            ps.setString(2, Role.PROMOTER.name());
+
+            return ps;
+        }, keyHolder);
+
+        long memberId = keyHolder.getKey().longValue();
+
         String venueSelectSql = "SELECT venue_id FROM venue WHERE venue = ?";
         Long venueId = jdbcTemplate.queryForObject(venueSelectSql, Long.class, Venue.MAJESTIC_BALLROOM.name());
         String sql = """
             INSERT INTO banquet (
                 banquet_id, banquet_name, banquet_date, start_time, end_time, promoter_id, venue_id)
-                VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', 1, ?);
+                VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', ?, ?);
             """;
 
-        jdbcTemplate.update(sql, venueId);
+        jdbcTemplate.update(sql, memberId, venueId);
 
         BanquetSchedule banquetSchedule = new BanquetSchedule(
                 LocalDate.of(2026, 10, 10),
