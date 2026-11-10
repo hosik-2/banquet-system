@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.PreparedStatement;
 import java.sql.Statement;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -191,5 +192,130 @@ class JdbcBanquetRepositoryTest {
         assertThat(status).isEqualTo(BanquetStatus.CONFIRMED);
 
     }
+
+    @Test
+    void 행사_생성시_created_by_생성() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().plusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(20, 0)
+        );
+
+        Banquet banquet = Banquet.register(
+                "테스트 행사10",
+                banquetSchedule,
+                Venue.MAJESTIC_BALLROOM,
+                null,
+                loginMember.getId()
+        );
+        Banquet save = banquetRepository.save(banquet, venueId, loginMember.getId());
+        Long banquetId = save.getBanquetId();
+
+        BanquetDetail banquetDetail = banquetRepository.findById(banquetId);
+        Long createdBy = banquetDetail.getAuditInfo().getCreatedBy();
+        Long updatedBy = banquetDetail.getAuditInfo().getUpdatedBy();
+
+        assertThat(createdBy).isEqualTo(loginMember.getId());
+        assertThat(updatedBy).isEqualTo(loginMember.getId());
+    }
+
+    @Test
+    void 행사_수정시_updated_by_수정() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().plusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(20, 0)
+        );
+
+        Banquet banquet = Banquet.register(
+                "테스트 행사10",
+                banquetSchedule,
+                Venue.MAJESTIC_BALLROOM,
+                null,
+                loginMember.getId()
+        );
+
+        String createMember = """
+                INSERT INTO member (member_name, department, role)
+                VALUES ('member1', ?, ?);
+                """;
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(createMember, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setString(1, Department.Convention.name());
+            ps.setString(2, Role.PROMOTER.name());
+
+            return ps;
+        }, keyHolder);
+
+        Long newPromoterId = keyHolder.getKey().longValue();
+
+        Banquet save = banquetRepository.save(banquet, venueId, loginMember.getId());
+        Long banquetId = save.getBanquetId();
+        BanquetDetail banquetDetail = banquetRepository.findById(banquetId);
+        Long saveUpdatedBy = banquetDetail.getAuditInfo().getUpdatedBy();
+
+        banquetRepository.update(
+                banquetId, venueId, banquet, banquetDetail.getBanquet().getVersion(), newPromoterId
+        );
+        BanquetDetail updatedBanquetDetail = banquetRepository.findById(banquetId);
+        Long updatedUpdatedBy = updatedBanquetDetail.getAuditInfo().getUpdatedBy();
+        Long createdBy = updatedBanquetDetail.getAuditInfo().getCreatedBy();
+
+        assertThat(createdBy).isEqualTo(loginMember.getId());
+        assertThat(saveUpdatedBy).isEqualTo(loginMember.getId());
+        assertThat(updatedUpdatedBy).isEqualTo(newPromoterId);
+
+    }
+
+    @Test
+    void 상태_변경시_updated_by_수정() {
+        BanquetSchedule banquetSchedule = new BanquetSchedule(
+                LocalDate.now().plusDays(1),
+                LocalTime.of(10, 0),
+                LocalTime.of(20, 0)
+        );
+
+        Banquet banquet = Banquet.register(
+                "테스트 행사10",
+                banquetSchedule,
+                Venue.MAJESTIC_BALLROOM,
+                null,
+                loginMember.getId()
+        );
+
+        String createMember = """
+                INSERT INTO member (member_name, department, role)
+                VALUES ('member1', ?, ?);
+                """;
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+        jdbcTemplate.update(con -> {
+            PreparedStatement ps = con.prepareStatement(createMember, Statement.RETURN_GENERATED_KEYS);
+
+            ps.setString(1, Department.Convention.name());
+            ps.setString(2, Role.PROMOTER.name());
+
+            return ps;
+        }, keyHolder);
+
+        Long newPromoterId = keyHolder.getKey().longValue();
+
+        Banquet save = banquetRepository.save(banquet, venueId, loginMember.getId());
+        Long banquetId = save.getBanquetId();
+
+        BanquetDetail banquetDetail = banquetRepository.findById(banquetId);
+        Long updatedBy = banquetDetail.getAuditInfo().getUpdatedBy();
+
+        banquetRepository.changeStatus(banquetId, BanquetStatus.CONFIRMED, banquetDetail.getBanquet().getVersion(), newPromoterId);
+
+        BanquetDetail newBanquetDetail = banquetRepository.findById(banquetId);
+
+        Long newUpdatedBy = newBanquetDetail.getAuditInfo().getUpdatedBy();
+
+        assertThat(newUpdatedBy).isEqualTo(newPromoterId);
+
+    }
+
 
 }
