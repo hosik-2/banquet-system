@@ -1,5 +1,6 @@
 package com.convention.banquet_system.repository;
 
+import com.convention.banquet_system.auth.LoginMember;
 import com.convention.banquet_system.domain.Banquet;
 import com.convention.banquet_system.domain.BanquetSchedule;
 import com.convention.banquet_system.domain.BanquetStatus;
@@ -29,7 +30,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
     private final JdbcTemplate jdbcTemplate; // DB조작 도구임 주입 받고 쓰면 됌
 
     @Override
-    public Banquet save(Banquet banquet, Long venueId) {
+    public Banquet save(Banquet banquet, Long venueId, Long actorId) {
 //        커넥션 취득이나 나머지 자원 반환도 jdbcTemplate에서 알아서 해줌 그래서 템플릿을 주입 받아서 update(), query()
 //        같은 메서드로 커넥션 풀이나 다른 거 고민할 필요 없이 알아서 다 해주니 우리는 람다식에 커넥션이랑 자동증가값이 있다면
 //        그 인자만 잘 넘겨주고 preparedStatement 세팅만 잘 해줘서 람다식 안에서 그걸 리턴해주고 객체를 잘 넘기면 됌 ㅇㅋ?
@@ -38,7 +39,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
 
         String sql = """
                 INSERT INTO banquet (banquet_name, banquet_date, start_time, end_time, promoter_id, in_charge_id,
-                venue_id, guarantee) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""";
+                venue_id, guarantee, created_by, updated_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""";
 
         jdbcTemplate.update(connection -> {
             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
@@ -54,6 +55,8 @@ public class JdbcBanquetRepository implements BanquetRepository {
             ps.setLong(7, venueId);
             ps.setObject(8, banquet.getGuarantee() != null ?
                     banquet.getGuarantee() : null);
+            ps.setLong(9, actorId);
+            ps.setLong(10, actorId);
 
 
             return ps;
@@ -116,7 +119,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
     }
 
     @Override
-    public Integer update(Long banquetId, Long venueId, Banquet banquet, Long version) {
+    public Integer update(Long banquetId, Long venueId, Banquet banquet, Long version, Long actorId) {
         String sql = """
                 UPDATE banquet
                 SET banquet_name = ?,
@@ -126,7 +129,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 in_charge_id = ?,
                 venue_id = ?,
                 guarantee = ?,
-                updated_at = NOW(),
+                updated_by = ?,
                 version = version + 1
                 WHERE banquet_id = ?
                 AND version = ?;
@@ -139,6 +142,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 banquet.getInChargeId(),
                 venueId,
                 banquet.getGuarantee(),
+                actorId,
                 banquetId,
                 version);
 
@@ -157,13 +161,13 @@ public class JdbcBanquetRepository implements BanquetRepository {
     }
 
     @Override
-    public Integer changeStatus(Long banquetId, BanquetStatus status, Long version) {
+    public Integer changeStatus(Long banquetId, BanquetStatus status, Long version, Long actorId) {
 
         String sql = """
-                UPDATE banquet SET status = ?, version = version + 1 WHERE banquet_id = ? AND version = ?;
+                UPDATE banquet SET status = ?, version = version + 1, updated_by = ? WHERE banquet_id = ? AND version = ?;
                 """;
 
-        return jdbcTemplate.update(sql, status.name(), banquetId, version);
+        return jdbcTemplate.update(sql, status.name(), actorId, banquetId, version);
 
     }
 
@@ -189,8 +193,8 @@ public class JdbcBanquetRepository implements BanquetRepository {
         AuditInfo auditInfo = new AuditInfo(
                 rs.getTimestamp("created_at").toLocalDateTime(),
                 rs.getTimestamp("updated_at").toLocalDateTime(),
-                rs.getLong("created_by"),
-                rs.getLong("updated_by")
+                rs.getObject("created_by", Long.class),
+                rs.getObject("updated_by", Long.class)
         );
         BanquetDetail banquetDetail = new BanquetDetail(banquet, auditInfo);
 
