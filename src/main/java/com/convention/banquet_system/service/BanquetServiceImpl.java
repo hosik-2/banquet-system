@@ -58,7 +58,7 @@ public class BanquetServiceImpl implements BanquetService {
                 request.getVenue(),
                 request.getGuarantee(),
                 actor.getId()
-        ), venueId);
+        ), venueId, actor.getId());
 
         return banquet.getBanquetId();
 
@@ -109,7 +109,7 @@ public class BanquetServiceImpl implements BanquetService {
         banquet.changeVenue(request.getVenue());
         banquet.changeGuarantee(request.getGuarantee());
 
-        Integer updated = banquetRepository.update(banquetId, venueId, banquet, request.getVersion());
+        Integer updated = banquetRepository.update(banquetId, venueId, banquet, request.getVersion(), actor.getId());
         if (updated == 0) {
             throw new BusinessException(ErrorCode.CONFLICT_MODIFIED);
         }
@@ -131,7 +131,7 @@ public class BanquetServiceImpl implements BanquetService {
             default -> throw new BusinessException(ErrorCode.INVALID_STATUS_TRANSITION);
         }
 
-        Integer updated = banquetRepository.changeStatus(banquetId, banquet.getStatus(), request.getVersion());
+        Integer updated = banquetRepository.changeStatus(banquetId, banquet.getStatus(), request.getVersion(), actor.getId());
         if (updated == 0) {
             throw new BusinessException(ErrorCode.CONFLICT_MODIFIED);
         }

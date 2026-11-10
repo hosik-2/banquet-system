@@ -1,5 +1,6 @@
 package com.convention.banquet_system.repository;
 
+import com.convention.banquet_system.auth.LoginMember;
 import com.convention.banquet_system.domain.*;
 import com.convention.banquet_system.query.BanquetDetail;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,6 +33,7 @@ class JdbcBanquetRepositoryTest {
 
     private Long promoterId;
     private Long venueId;
+    private LoginMember loginMember;
     private static Long BANQUET_ID = 10L;
 
     @BeforeEach
@@ -61,6 +63,8 @@ class JdbcBanquetRepositoryTest {
                 VALUES (10, '테스트 행사10', '2026-10-10', '10:00:00', '16:00:00', ?, ?);
             """;
         jdbcTemplate.update(sql, promoterId, venueId);
+        loginMember = new LoginMember(promoterId, Role.PROMOTER);
+
     }
 
     @Test
@@ -115,7 +119,8 @@ class JdbcBanquetRepositoryTest {
                 1L
         );
 
-        Integer updated = banquetRepository.update(BANQUET_ID, venueId, banquet, 0L);
+
+        Integer updated = banquetRepository.update(BANQUET_ID, venueId, banquet, 0L, loginMember.getId());
         LocalTime endTime = jdbcTemplate.queryForObject("SELECT end_time FROM banquet WHERE banquet_id = 10", LocalTime.class);
         Long version = jdbcTemplate.queryForObject("SELECT version FROM banquet WHERE banquet_id = 10", Long.class);
 
@@ -161,7 +166,7 @@ class JdbcBanquetRepositoryTest {
                 1L
         );
 
-        Integer updated = banquetRepository.update(BANQUET_ID, venueId, banquet, 1L);
+        Integer updated = banquetRepository.update(BANQUET_ID, venueId, banquet, 1L, loginMember.getId());
         LocalTime endTime = jdbcTemplate.queryForObject("SELECT end_time FROM banquet WHERE banquet_id = 10", LocalTime.class);
         Long version = jdbcTemplate.queryForObject("SELECT version FROM banquet WHERE banquet_id = 10", Long.class);
 
@@ -176,7 +181,7 @@ class JdbcBanquetRepositoryTest {
                 SELECT version FROM banquet WHERE banquet_id = ?
                 """, Long.class, BANQUET_ID);
 
-        Integer changed = banquetRepository.changeStatus(BANQUET_ID, BanquetStatus.CONFIRMED, banquetVersion);
+        Integer changed = banquetRepository.changeStatus(BANQUET_ID, BanquetStatus.CONFIRMED, banquetVersion, loginMember.getId());
         BanquetStatus status = jdbcTemplate.queryForObject("""
                 SELECT status FROM banquet WHERE banquet_id = ?
                 """, BanquetStatus.class, BANQUET_ID);
