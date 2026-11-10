@@ -24,4 +24,10 @@ public class BanquetPolicy {
         }
     }
 
+    public void ensureCanChangeStatus(LoginMember actor, Long promoterId) {
+        if (!actor.getId().equals(promoterId)) {
+            throw new BusinessException(ErrorCode.BANQUET_CHANGE_STATUS_FORBIDDEN);
+        }
+    }
+
 }

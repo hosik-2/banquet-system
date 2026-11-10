@@ -2,6 +2,7 @@ package com.convention.banquet_system.repository;
 
 import com.convention.banquet_system.domain.Banquet;
 import com.convention.banquet_system.domain.BanquetSchedule;
+import com.convention.banquet_system.domain.BanquetStatus;
 import com.convention.banquet_system.query.BanquetDetail;
 
 //Repository는 DTO가 아닌 도메인(엔티티)를 주고받는 객체임 명심하셈
@@ -20,5 +21,7 @@ public interface BanquetRepository {
     Integer update(Long banquetId, Long venueId, Banquet banquet, Long version);
 
     BanquetDetail findById(Long banquetId);
+
+    Integer changeStatus(Long banquetId, BanquetStatus status, Long version);
 
 }

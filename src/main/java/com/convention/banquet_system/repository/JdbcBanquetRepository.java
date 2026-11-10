@@ -79,6 +79,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 AND banquet_date = ?
                 AND start_time < ?
                 AND end_time > ?
+                AND status <> 'CANCELLED'
                 );
                 """;
 
@@ -101,6 +102,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 AND start_time < ?
                 AND end_time > ?
                 AND banquet_id <> ?
+                AND status <> 'CANCELLED'
                 );
                 """;
 
@@ -153,6 +155,19 @@ public class JdbcBanquetRepository implements BanquetRepository {
         return jdbcTemplate.queryForObject(
                 sql, (rs, rowNum) -> mapBanquetDetail(rs), banquetId);
     }
+
+    @Override
+    public Integer changeStatus(Long banquetId, BanquetStatus status, Long version) {
+
+        String sql = """
+                UPDATE banquet SET status = ?, version = version + 1 WHERE banquet_id = ? AND version = ?;
+                """;
+
+        return jdbcTemplate.update(sql, status.name(), banquetId, version);
+
+    }
+
+
 
     private static @NonNull BanquetDetail mapBanquetDetail(ResultSet rs) throws SQLException {
         BanquetSchedule schedule = new BanquetSchedule(

@@ -6,6 +6,7 @@ import com.convention.banquet_system.exception.ErrorCode;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class BanquetPolicyTest {
@@ -27,7 +28,26 @@ class BanquetPolicyTest {
                 BusinessException.class, () -> banquetPolicy.ensureCanRegister(loginMember)
         );
 
-        Assertions.assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_REGISTER_FORBIDDEN);
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_REGISTER_FORBIDDEN);
 
     }
+
+    @Test
+    void 상태_변경_가능() {
+        LoginMember loginMember = new LoginMember(1L, Role.PROMOTER);
+
+        banquetPolicy.ensureCanChangeStatus(loginMember, 1L);
+
+    }
+
+    @Test
+    void 해당_행사의_판촉_담당자가_아니면_상태_변경_거부() {
+        LoginMember loginMember = new LoginMember(2L, Role.PROMOTER);
+
+        BusinessException exception = assertThrows(BusinessException.class, () -> banquetPolicy.ensureCanChangeStatus(loginMember, 1L));
+
+        assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.BANQUET_CHANGE_STATUS_FORBIDDEN);
+    }
+
+
 }

@@ -52,5 +52,13 @@ public class BanquetApiController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
+    @PutMapping("/{banquetId}/status")
+    public ResponseEntity<Long> changeStatus(@PathVariable Long banquetId,
+                                             @Valid @RequestBody ChangeStatusRequest dto,
+                                             @CurrentMember LoginMember actor) {
+        Long response = banquetService.updateBanquetStatus(banquetId, dto, actor);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
 
 }

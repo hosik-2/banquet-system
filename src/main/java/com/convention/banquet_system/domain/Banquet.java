@@ -1,6 +1,12 @@
 package com.convention.banquet_system.domain;
 
+import com.convention.banquet_system.exception.BusinessException;
+import com.convention.banquet_system.exception.ErrorCode;
 import lombok.Getter;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Getter
 public class Banquet {
@@ -91,14 +97,35 @@ public class Banquet {
     }
 
     public void assignVersion(Long version) {
-        this.version = version;}
+        this.version = version;
+    }
 
+    /**
+     * 상태 전이 규칙은 도메인의 책임으로 구현함
+     */
     public void cancel() {
-        this.status = BanquetStatus.CANCELLED;
+        if (status == BanquetStatus.COMPLETED || status == BanquetStatus.CANCELLED) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS_TRANSITION);
+        }
+        status = BanquetStatus.CANCELLED;
     }
 
     public void confirm() {
-        this.status = BanquetStatus.CONFIRMED;
+        if (status != BanquetStatus.PENDING) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS_TRANSITION);
+        }
+        status = BanquetStatus.CONFIRMED;
+    }
+
+    public void complete() {
+        LocalDateTime dateTime = LocalDateTime.of(schedule.getBanquetDate(), schedule.getEndTime());
+        if (dateTime.isAfter(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.BANQUET_TIME_INVALID);
+        }
+        if (status != BanquetStatus.CONFIRMED) {
+            throw new BusinessException(ErrorCode.INVALID_STATUS_TRANSITION);
+        }
+        status = BanquetStatus.COMPLETED;
     }
 }
 
