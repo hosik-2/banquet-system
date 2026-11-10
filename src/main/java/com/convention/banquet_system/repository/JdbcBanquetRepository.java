@@ -79,6 +79,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 AND banquet_date = ?
                 AND start_time < ?
                 AND end_time > ?
+                AND status <> 'CANCELLED'
                 );
                 """;
 
@@ -101,6 +102,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 AND start_time < ?
                 AND end_time > ?
                 AND banquet_id <> ?
+                AND status <> 'CANCELLED'
                 );
                 """;
 
@@ -147,7 +149,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
     public BanquetDetail findById(Long banquetId) {
         String sql = """
                 SELECT * FROM banquet b JOIN venue v
-                ON b.venue_id = v.venue_id WHERE banquet_id = ?
+                ON b.venue_id = v.venue_id WHERE banquet_id = ? AND status <> 'CANCELLED'
                 """;
 
         return jdbcTemplate.queryForObject(
