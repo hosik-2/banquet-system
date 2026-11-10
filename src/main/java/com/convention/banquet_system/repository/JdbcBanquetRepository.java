@@ -149,7 +149,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
     public BanquetDetail findById(Long banquetId) {
         String sql = """
                 SELECT * FROM banquet b JOIN venue v
-                ON b.venue_id = v.venue_id WHERE banquet_id = ? AND status <> 'CANCELLED'
+                ON b.venue_id = v.venue_id WHERE banquet_id = ?
                 """;
 
         return jdbcTemplate.queryForObject(
@@ -163,7 +163,7 @@ public class JdbcBanquetRepository implements BanquetRepository {
                 UPDATE banquet SET status = ?, version = version + 1 WHERE banquet_id = ? AND version = ?;
                 """;
 
-        return jdbcTemplate.update(sql, status, banquetId, version);
+        return jdbcTemplate.update(sql, status.name(), banquetId, version);
 
     }
 
