@@ -58,7 +58,7 @@ class BanquetServiceImplTest {
 
         //가짜 로그인 멤버
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
-        given(banquetRepository.save(any(), any())).willReturn(banquet);
+        given(banquetRepository.save(any(), any(), any())).willReturn(banquet);
 
         //when
         //then
@@ -206,7 +206,7 @@ class BanquetServiceImplTest {
 
         given(banquetRepository.findById(banquet.getBanquetId())).willReturn(banquetDetail);
         given(banquetRepository.existsOverlappingForUpdate(any(), any(), any())).willReturn(false);
-        given(banquetRepository.update(any(), any(), any(), any())).willReturn(1);
+        given(banquetRepository.update(any(), any(), any(), any(), any())).willReturn(1);
         given(venueRepository.findIdForUpdate(Venue.GALLERY_HALL)).willReturn(3L);
 
         BanquetUpdateResult updateResult = banquetService.updateBanquet(10L, updateRequest, actor);
@@ -347,7 +347,8 @@ class BanquetServiceImplTest {
                 banquet.getBanquetId(),
                 3L,
                 banquet,
-                updateRequest.getVersion()
+                updateRequest.getVersion(),
+                actor.getId()
         )).willReturn(0);
         given(banquetRepository.existsOverlappingForUpdate(any(), any(), any())).willReturn(false);
 
@@ -395,7 +396,7 @@ class BanquetServiceImplTest {
         ChangeStatusRequest request = new ChangeStatusRequest(3L, BanquetStatus.CONFIRMED);
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
 
-        given(banquetRepository.changeStatus(1L, BanquetStatus.CONFIRMED, 3L))
+        given(banquetRepository.changeStatus(1L, BanquetStatus.CONFIRMED, 3L, actor.getId()))
                 .willReturn(1);
         given(banquetRepository.findById(1L)).willReturn(banquetDetail);
 
@@ -404,7 +405,7 @@ class BanquetServiceImplTest {
 
         //then
         assertThat(updatedVersion).isEqualTo(4L);
-        verify(banquetRepository).changeStatus(eq(1L), eq(BanquetStatus.CONFIRMED), eq(3L));
+        verify(banquetRepository).changeStatus(eq(1L), eq(BanquetStatus.CONFIRMED), eq(3L), any());
 
     }
 
@@ -427,14 +428,14 @@ class BanquetServiceImplTest {
         LoginMember actor = new LoginMember(1L, Role.PROMOTER);
 
         given(banquetRepository.findById(1L)).willReturn(banquetDetail);
-        given(banquetRepository.changeStatus(1L, BanquetStatus.CONFIRMED, 3L))
+        given(banquetRepository.changeStatus(1L, BanquetStatus.CONFIRMED, 3L, actor.getId()))
                 .willReturn(0);
 
         //then
         BusinessException exception = catchThrowableOfType(() -> banquetService.updateBanquetStatus(1L, request, actor), BusinessException.class);
 
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.CONFLICT_MODIFIED);
-        verify(banquetRepository).changeStatus(eq(1L), eq(BanquetStatus.CONFIRMED), eq(3L));
+        verify(banquetRepository).changeStatus(eq(1L), eq(BanquetStatus.CONFIRMED), eq(3L), any());
 
     }
 
@@ -463,7 +464,7 @@ class BanquetServiceImplTest {
 
         //then
         assertThat(exception.getErrorCode()).isEqualTo(ErrorCode.INVALID_STATUS_TRANSITION);
-        verify(banquetRepository, never()).changeStatus(any(), any(), any());
+        verify(banquetRepository, never()).changeStatus(any(), any(), any(), any());
 
     }
 
